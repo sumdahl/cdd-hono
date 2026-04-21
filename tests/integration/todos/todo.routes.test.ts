@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from "bun:test";
 import { OpenAPIHono } from "@hono/zod-openapi";
-import { InMemoryTodoRepository } from "../../../src/server/infrastructure/persistence/todo.in-memory.repository";
+import { InMemoryTodoRepository } from "../../mocks/todo.in-memory.repository";
 import { GetAllTodosUseCase } from "../../../src/server/core/use-cases/todos/get-all-todos";
 import { CreateTodoUseCase } from "../../../src/server/core/use-cases/todos/create-todo";
 import { createTodoRouter } from "../../../src/server/infrastructure/http/todos/todo.routes";
