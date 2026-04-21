@@ -7,6 +7,7 @@ import { LogoutUseCase } from "../../../src/server/core/use-cases/auth/logout";
 import { MeUseCase } from "../../../src/server/core/use-cases/auth/me";
 import { createAuthRouter } from "../../../src/server/infrastructure/http/auth/auth.routes";
 import { InMemoryUserRepository } from "../../mocks/user.in-memory.repository";
+import { errorHandler } from "../../../src/server/infrastructure/http/middleware/error-handler";
 
 let app: OpenAPIHono;
 
@@ -20,6 +21,7 @@ beforeAll(() => {
     new MeUseCase(repository),
   );
   app = new OpenAPIHono();
+  app.onError(errorHandler);
   app.route("/api/v1/auth", authRouter);
 });
 
