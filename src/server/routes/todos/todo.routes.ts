@@ -52,6 +52,7 @@ export const todoRouter = router({
         description: input.description,
         isCompleted: false,
       };
+      TODOS.push(newTodo);
       return { todo: newTodo };
     }),
 });
