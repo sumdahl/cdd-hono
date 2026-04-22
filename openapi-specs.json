@@ -20,7 +20,7 @@
         "tags": [
           "Health"
         ],
-        "description": "Health check endpoint",
+        "description": "Deep health check — verifies DB connectivity",
         "responses": {
           "200": {
             "description": "Service is healthy",
@@ -32,7 +32,8 @@
                     "status": {
                       "type": "string",
                       "enum": [
-                        "ok"
+                        "ok",
+                        "degraded"
                       ]
                     },
                     "uptime": {
@@ -40,12 +41,102 @@
                     },
                     "timestamp": {
                       "type": "string"
+                    },
+                    "services": {
+                      "type": "object",
+                      "properties": {
+                        "database": {
+                          "type": "object",
+                          "properties": {
+                            "status": {
+                              "type": "string",
+                              "enum": [
+                                "ok",
+                                "error"
+                              ]
+                            },
+                            "latencyMs": {
+                              "type": "number"
+                            },
+                            "error": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "status"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "database"
+                      ]
                     }
                   },
                   "required": [
                     "status",
                     "uptime",
-                    "timestamp"
+                    "timestamp",
+                    "services"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service is degraded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "ok",
+                        "degraded"
+                      ]
+                    },
+                    "uptime": {
+                      "type": "number"
+                    },
+                    "timestamp": {
+                      "type": "string"
+                    },
+                    "services": {
+                      "type": "object",
+                      "properties": {
+                        "database": {
+                          "type": "object",
+                          "properties": {
+                            "status": {
+                              "type": "string",
+                              "enum": [
+                                "ok",
+                                "error"
+                              ]
+                            },
+                            "latencyMs": {
+                              "type": "number"
+                            },
+                            "error": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "status"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "database"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "uptime",
+                    "timestamp",
+                    "services"
                   ]
                 }
               }
