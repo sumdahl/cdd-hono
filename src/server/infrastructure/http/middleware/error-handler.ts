@@ -1,10 +1,13 @@
 import { Context } from "hono";
 import { AppError } from "../../../core/errors";
 import { formatError } from "../response/response.formatter";
-import { ErrorCode } from "../../../core/errors";
 
 export const errorHandler = (err: Error, c: Context) => {
-  console.error(`[ERROR] ${c.req.method} ${c.req.path}:`, err.message);
+  const requestId = c.get("requestId") ?? "unknown";
+  console.error(
+    `[ERROR] [${requestId}] ${c.req.method} ${c.req.path}:`,
+    err.message,
+  );
 
   if (err instanceof AppError) {
     return c.json(formatError(err.code, err.message), err.statusCode);
@@ -26,14 +29,14 @@ export const errorHandler = (err: Error, c: Context) => {
       );
     } catch {
       return c.json(
-        formatError(ErrorCode.VALIDATION_ERROR, "Invalid request data"),
+        formatError("VALIDATION_ERROR", "Invalid request data"),
         422,
       );
     }
   }
 
   return c.json(
-    formatError(ErrorCode.INTERNAL_SERVER_ERROR, "Something went wrong"),
+    formatError("INTERNAL_SERVER_ERROR", "Something went wrong"),
     500,
   );
 };
