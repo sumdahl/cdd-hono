@@ -1,6 +1,7 @@
 import { Context } from "hono";
 import { AppError } from "../../../core/errors";
 import { formatError } from "../response/response.formatter";
+import { ErrorCode } from "../../../core/errors";
 
 export const errorHandler = (err: Error, c: Context) => {
   console.error(`[ERROR] ${c.req.method} ${c.req.path}:`, err.message);
@@ -25,14 +26,14 @@ export const errorHandler = (err: Error, c: Context) => {
       );
     } catch {
       return c.json(
-        formatError("VALIDATION_ERROR", "Invalid request data"),
+        formatError(ErrorCode.VALIDATION_ERROR, "Invalid request data"),
         422,
       );
     }
   }
 
   return c.json(
-    formatError("INTERNAL_SERVER_ERROR", "Something went wrong"),
+    formatError(ErrorCode.INTERNAL_SERVER_ERROR, "Something went wrong"),
     500,
   );
 };

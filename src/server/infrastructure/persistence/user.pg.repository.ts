@@ -4,6 +4,7 @@ import { users, refreshTokens } from "./schema/user.schema";
 import { IUserRepository } from "../../core/repositories/user.repository";
 import { UserEntity } from "../../core/entities/user.entity";
 import { AppError } from "../../core/errors";
+import { ErrorCode } from "../../core/errors";
 
 const PG_UNIQUE_VIOLATION = "23505";
 
@@ -27,7 +28,7 @@ export class PostgresUserRepository implements IUserRepository {
       );
     } catch (err) {
       console.error("[DB] findById failed:", err);
-      throw new AppError("DB_ERROR", "Failed to find user", 500);
+      throw new AppError(ErrorCode.DB_ERROR, "Failed to find user", 500);
     }
   }
 
@@ -47,7 +48,7 @@ export class PostgresUserRepository implements IUserRepository {
       );
     } catch (err) {
       console.error("[DB] findByEmail failed:", err);
-      throw new AppError("DB_ERROR", "Failed to find user", 500);
+      throw new AppError(ErrorCode.DB_ERROR, "Failed to find user", 500);
     }
   }
 
@@ -71,9 +72,9 @@ export class PostgresUserRepository implements IUserRepository {
     } catch (err) {
       console.error("[DB] create user failed:", err);
       if (isDbError(err) && err.code === PG_UNIQUE_VIOLATION) {
-        throw new AppError("EMAIL_TAKEN", "Email already in use", 409);
+        throw new AppError(ErrorCode.EMAIL_TAKEN, "Email already in use", 409);
       }
-      throw new AppError("DB_ERROR", "Failed to create user", 500);
+      throw new AppError(ErrorCode.DB_ERROR, "Failed to create user", 500);
     }
   }
 
@@ -91,7 +92,11 @@ export class PostgresUserRepository implements IUserRepository {
       });
     } catch (err) {
       console.error("[DB] saveRefreshToken failed:", err);
-      throw new AppError("DB_ERROR", "Failed to save refresh token", 500);
+      throw new AppError(
+        ErrorCode.DB_ERROR,
+        "Failed to save refresh token",
+        500,
+      );
     }
   }
 
@@ -107,7 +112,11 @@ export class PostgresUserRepository implements IUserRepository {
       return { userId: row.userId, expiresAt: row.expiresAt };
     } catch (err) {
       console.error("[DB] findRefreshToken failed:", err);
-      throw new AppError("DB_ERROR", "Failed to find refresh token", 500);
+      throw new AppError(
+        ErrorCode.DB_ERROR,
+        "Failed to find refresh token",
+        500,
+      );
     }
   }
 
@@ -116,7 +125,11 @@ export class PostgresUserRepository implements IUserRepository {
       await this.db.delete(refreshTokens).where(eq(refreshTokens.token, token));
     } catch (err) {
       console.error("[DB] deleteRefreshToken failed:", err);
-      throw new AppError("DB_ERROR", "Failed to delete refresh token", 500);
+      throw new AppError(
+        ErrorCode.DB_ERROR,
+        "Failed to delete refresh token",
+        500,
+      );
     }
   }
 
@@ -127,7 +140,11 @@ export class PostgresUserRepository implements IUserRepository {
         .where(eq(refreshTokens.userId, userId));
     } catch (err) {
       console.error("[DB] deleteAllRefreshTokens failed:", err);
-      throw new AppError("DB_ERROR", "Failed to delete refresh tokens", 500);
+      throw new AppError(
+        ErrorCode.DB_ERROR,
+        "Failed to delete refresh tokens",
+        500,
+      );
     }
   }
 }

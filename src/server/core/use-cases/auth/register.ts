@@ -1,6 +1,7 @@
 import { IUserRepository } from "../../repositories/user.repository";
 import { AppError } from "../../errors";
 import bcrypt from "bcryptjs";
+import { ErrorCode } from "../../errors";
 
 export class RegisterUseCase {
   constructor(private readonly userRepository: IUserRepository) {}
@@ -8,7 +9,7 @@ export class RegisterUseCase {
   async execute(data: { email: string; name: string; password: string }) {
     const existing = await this.userRepository.findByEmail(data.email);
     if (existing) {
-      throw new AppError("EMAIL_TAKEN", "Email already in use", 409);
+      throw new AppError(ErrorCode.EMAIL_TAKEN, "Email already in use", 409);
     }
 
     const passwordHash = await bcrypt.hash(data.password, 12);

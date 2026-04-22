@@ -1,5 +1,5 @@
 import { IUserRepository } from "../../repositories/user.repository";
-import { AppError } from "../../../core/errors";
+import { AppError, ErrorCode } from "../../../core/errors";
 import { env } from "../../../config/env";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";

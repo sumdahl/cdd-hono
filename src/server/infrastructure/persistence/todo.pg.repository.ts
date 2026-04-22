@@ -3,6 +3,7 @@ import { todos } from "./schema/todo.schema";
 import { ITodoRepository } from "../../core/repositories/todo.repository";
 import { TodoEntity } from "../../core/entities/todo.entity";
 import { AppError } from "../../core/errors";
+import { ErrorCode } from "../../core/errors";
 
 export class PostgresTodoRepository implements ITodoRepository {
   constructor(private readonly db: DB) {}
@@ -15,7 +16,7 @@ export class PostgresTodoRepository implements ITodoRepository {
           new TodoEntity(r.id, r.title, r.description ?? "", r.isCompleted),
       );
     } catch (err) {
-      throw new AppError("DB_ERROR", "Failed to fetch todos", 500);
+      throw new AppError(ErrorCode.DB_ERROR, "Failed to fetch todos", 500);
     }
   }
 
@@ -41,7 +42,7 @@ export class PostgresTodoRepository implements ITodoRepository {
         row.isCompleted,
       );
     } catch (err) {
-      throw new AppError("DB_ERROR", "Failed to create todo", 500);
+      throw new AppError(ErrorCode.DB_ERROR, "Failed to create todo", 500);
     }
   }
 }

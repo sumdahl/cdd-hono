@@ -6,6 +6,7 @@ import { healthRouter } from "./infrastructure/http/health/health.routes";
 import { requestLogger } from "./infrastructure/http/middleware/logger";
 import { rateLimiter } from "./infrastructure/http/middleware/rate-limiter";
 import { errorHandler } from "./infrastructure/http/middleware/error-handler";
+import { ErrorCode } from "./core/errors";
 
 const apiRouter = new OpenAPIHono().basePath("/api/v1");
 
@@ -46,7 +47,7 @@ apiRouter.notFound((c) =>
     {
       success: false,
       error: {
-        code: "NOT_FOUND",
+        code: ErrorCode.NOT_FOUND,
         message: `Route ${c.req.method} ${c.req.path} not found`,
       },
     },
