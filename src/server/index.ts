@@ -1,4 +1,5 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
+import { cors } from "hono/cors";
 import { todoRouter } from "./infrastructure/http/todos";
 import { authRouter } from "./infrastructure/http/auth";
 import { requestLogger } from "./infrastructure/http/middleware/logger";
@@ -7,8 +8,24 @@ import {
   formatError,
 } from "./infrastructure/http/middleware/error-handler";
 import { healthRouter } from "./infrastructure/http/health/health.routes";
+import { rateLimiter } from "./infrastructure/http/middleware/rate-limiter";
 
 const apiRouter = new OpenAPIHono().basePath("/api/v1");
+
+apiRouter.use(
+  "*",
+  cors({
+    origin: ["http://localhost:3000", "http://localhost:5173"],
+    allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowHeaders: ["Content-Type", "Authorization"],
+    exposeHeaders: ["Content-Length"],
+    maxAge: 86400,
+    credentials: true,
+  }),
+);
+
+apiRouter.use("*", rateLimiter({ limit: 100, windowMs: 60_000 }));
+apiRouter.use("/auth/*", rateLimiter({ limit: 10, windowMs: 60_000 }));
 
 apiRouter.use("*", requestLogger);
 
