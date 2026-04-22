@@ -3,6 +3,8 @@ node_modules/
 .pnp
 .pnp.js
 
+.kilo
+
 # Build output
 dist/
 build/
