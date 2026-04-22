@@ -1,3 +1,5 @@
+import { ErrorCode } from "../../../core/errors";
+
 export type ApiSuccessResponse<T> = {
   success: true;
   data: T;
@@ -7,7 +9,7 @@ export type ApiSuccessResponse<T> = {
 export type ApiErrorResponse = {
   success: false;
   error: {
-    code: string;
+    code: ErrorCode | string;
     message: string;
     details?: unknown;
   };

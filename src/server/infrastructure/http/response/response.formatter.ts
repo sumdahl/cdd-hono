@@ -1,4 +1,5 @@
 import { ApiSuccessResponse, ApiErrorResponse } from "./response.types";
+import { ErrorCode } from "../../../core/errors";
 
 export const formatSuccess = <T>(
   data: T,
@@ -10,7 +11,7 @@ export const formatSuccess = <T>(
 });
 
 export const formatError = (
-  code: string,
+  code: ErrorCode | string,
   message: string,
   details?: unknown,
 ): ApiErrorResponse => ({
