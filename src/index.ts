@@ -6,18 +6,17 @@ import { env } from "./server/config/env";
 const openApiDoc = app.getOpenAPIDocument({
   openapi: "3.0.0",
   info: {
-    title: "Contract-Driven API Development with Hono and OpenAPI",
+    title: "Contract-Driven API",
     version: "1.0.0",
+    description: "Contract-driven API development with Hono, Bun, and OpenAPI",
   },
   servers: [
     {
-      url: `http://localhost:${env.PORT}`,
+      url: `http://localhost:${env.PORT}/api/v1`,
       description: "Local development server",
     },
   ],
 });
-
-await Bun.write("./openapi-specs.json", JSON.stringify(openApiDoc, null, 2));
 
 app.get("/openapi.json", (c) => c.json(openApiDoc));
 app.get("/docs", swaggerUI({ url: "/openapi.json" }));

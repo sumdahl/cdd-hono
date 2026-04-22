@@ -1,8 +1,9 @@
 import { describe, it, expect, mock } from "bun:test";
 import { LoginUseCase } from "../../../../src/server/core/use-cases/auth/login";
 import { IUserRepository } from "../../../../src/server/core/repositories/user.repository";
+import { ITokenRepository } from "../../../../src/server/core/repositories/token.repository";
 import { UserEntity } from "../../../../src/server/core/entities/user.entity";
-import { AppError, ErrorCode } from "../../../../src/server/core/errors";
+import { AppError } from "../../../../src/server/core/errors";
 import bcrypt from "bcryptjs";
 
 const passwordHash = await bcrypt.hash("password123", 12);
@@ -14,19 +15,22 @@ const mockUser = new UserEntity(
   new Date(),
 );
 
-const mockRepository: IUserRepository = {
+const mockUserRepository: IUserRepository = {
   findById: mock(async () => null),
   findByEmail: mock(async () => mockUser),
   create: mock(async () => mockUser),
-  saveRefreshToken: mock(async () => {}),
-  findRefreshToken: mock(async () => null),
-  deleteRefreshToken: mock(async () => {}),
-  deleteAllRefreshTokens: mock(async () => {}),
+};
+
+const mockTokenRepository: ITokenRepository = {
+  save: mock(async () => {}),
+  find: mock(async () => null),
+  delete: mock(async () => {}),
+  deleteAllForUser: mock(async () => {}),
 };
 
 describe("LoginUseCase", () => {
   it("should return tokens on valid credentials", async () => {
-    const useCase = new LoginUseCase(mockRepository);
+    const useCase = new LoginUseCase(mockUserRepository, mockTokenRepository);
     const result = await useCase.execute({
       email: "sumiran@example.com",
       password: "password123",
@@ -38,7 +42,7 @@ describe("LoginUseCase", () => {
   });
 
   it("should throw INVALID_CREDENTIALS on wrong password", async () => {
-    const useCase = new LoginUseCase(mockRepository);
+    const useCase = new LoginUseCase(mockUserRepository, mockTokenRepository);
 
     expect(
       useCase.execute({
@@ -49,8 +53,11 @@ describe("LoginUseCase", () => {
   });
 
   it("should throw INVALID_CREDENTIALS if user not found", async () => {
-    const repo = { ...mockRepository, findByEmail: mock(async () => null) };
-    const useCase = new LoginUseCase(repo);
+    const userRepo = {
+      ...mockUserRepository,
+      findByEmail: mock(async () => null),
+    };
+    const useCase = new LoginUseCase(userRepo, mockTokenRepository);
 
     expect(
       useCase.execute({ email: "noone@example.com", password: "password123" }),

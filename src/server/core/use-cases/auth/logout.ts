@@ -1,11 +1,11 @@
-import { IUserRepository } from "../../repositories/user.repository";
-import { AppError } from "../../errors";
-import { ErrorCode } from "../../errors";
+import { ITokenRepository } from "../../repositories/token.repository";
+import { AppError, ErrorCode } from "../../errors";
+
 export class LogoutUseCase {
-  constructor(private readonly userRepository: IUserRepository) {}
+  constructor(private readonly tokenRepository: ITokenRepository) {}
 
   async execute(token: string) {
-    const stored = await this.userRepository.findRefreshToken(token);
+    const stored = await this.tokenRepository.find(token);
     if (!stored) {
       throw new AppError(
         ErrorCode.INVALID_TOKEN,
@@ -13,6 +13,6 @@ export class LogoutUseCase {
         401,
       );
     }
-    await this.userRepository.deleteRefreshToken(token);
+    await this.tokenRepository.delete(token);
   }
 }

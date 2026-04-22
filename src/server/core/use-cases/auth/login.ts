@@ -1,17 +1,21 @@
 import { IUserRepository } from "../../repositories/user.repository";
-import { AppError, ErrorCode } from "../../../core/errors";
+import { ITokenRepository } from "../../repositories/token.repository";
+import { AppError, ErrorCode } from "../../errors";
 import { env } from "../../../config/env";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 export class LoginUseCase {
-  constructor(private readonly userRepository: IUserRepository) {}
+  constructor(
+    private readonly userRepository: IUserRepository,
+    private readonly tokenRepository: ITokenRepository,
+  ) {}
 
   async execute(data: { email: string; password: string }) {
     const user = await this.userRepository.findByEmail(data.email);
     if (!user) {
       throw new AppError(
-        "INVALID_CREDENTIALS",
+        ErrorCode.INVALID_CREDENTIALS,
         "Invalid email or password",
         401,
       );
@@ -20,7 +24,7 @@ export class LoginUseCase {
     const valid = await bcrypt.compare(data.password, user.passwordHash);
     if (!valid) {
       throw new AppError(
-        "INVALID_CREDENTIALS",
+        ErrorCode.INVALID_CREDENTIALS,
         "Invalid email or password",
         401,
       );
@@ -38,11 +42,8 @@ export class LoginUseCase {
 
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7);
-    await this.userRepository.saveRefreshToken(
-      user.id,
-      refreshToken,
-      expiresAt,
-    );
+
+    await this.tokenRepository.save(user.id, refreshToken, expiresAt);
 
     return {
       accessToken,

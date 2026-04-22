@@ -7,19 +7,23 @@ import { LogoutUseCase } from "../../../src/server/core/use-cases/auth/logout";
 import { MeUseCase } from "../../../src/server/core/use-cases/auth/me";
 import { createAuthRouter } from "../../../src/server/infrastructure/http/auth/auth.routes";
 import { InMemoryUserRepository } from "../../mocks/user.in-memory.repository";
+import { InMemoryTokenRepository } from "../../mocks/token.in-memory.repository";
 import { errorHandler } from "../../../src/server/infrastructure/http/middleware/error-handler";
 
 let app: OpenAPIHono;
 
 beforeAll(() => {
-  const repository = new InMemoryUserRepository();
+  const userRepository = new InMemoryUserRepository();
+  const tokenRepository = new InMemoryTokenRepository();
+
   const authRouter = createAuthRouter(
-    new RegisterUseCase(repository),
-    new LoginUseCase(repository),
-    new RefreshUseCase(repository),
-    new LogoutUseCase(repository),
-    new MeUseCase(repository),
+    new RegisterUseCase(userRepository),
+    new LoginUseCase(userRepository, tokenRepository),
+    new RefreshUseCase(userRepository, tokenRepository),
+    new LogoutUseCase(tokenRepository),
+    new MeUseCase(userRepository),
   );
+
   app = new OpenAPIHono();
   app.onError(errorHandler);
   app.route("/api/v1/auth", authRouter);

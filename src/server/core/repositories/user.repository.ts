@@ -8,14 +8,4 @@ export interface IUserRepository {
     name: string;
     passwordHash: string;
   }): Promise<UserEntity>;
-  saveRefreshToken(
-    userId: string,
-    token: string,
-    expiresAt: Date,
-  ): Promise<void>;
-  findRefreshToken(
-    token: string,
-  ): Promise<{ userId: string; expiresAt: Date } | null>;
-  deleteRefreshToken(token: string): Promise<void>;
-  deleteAllRefreshTokens(userId: string): Promise<void>;
 }

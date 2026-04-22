@@ -1,5 +1,4 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
-import { todoRouter } from "./infrastructure/http/todos";
 import { authRouter } from "./infrastructure/http/auth";
 import { healthRouter } from "./infrastructure/http/health/health.routes";
 import { corsMiddleware } from "./infrastructure/http/middleware/cors";
@@ -36,6 +35,5 @@ app.notFound((c) =>
 
 app.route("/health", healthRouter);
 app.route("/auth", authRouter);
-app.route("/todos", todoRouter);
 
 app.onError(errorHandler);

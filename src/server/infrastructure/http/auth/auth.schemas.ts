@@ -33,4 +33,5 @@ export const authResponseSchema = z.object({
 
 export const accessTokenResponseSchema = z.object({
   accessToken: z.string(),
+  refreshToken: z.string(),
 });
