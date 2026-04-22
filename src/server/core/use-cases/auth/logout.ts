@@ -1,6 +1,5 @@
 import { IUserRepository } from "../../repositories/user.repository";
-import { AppError } from "../../../infrastructure/http/middleware/error-handler";
-
+import { AppError } from "../../errors";
 export class LogoutUseCase {
   constructor(private readonly userRepository: IUserRepository) {}
 

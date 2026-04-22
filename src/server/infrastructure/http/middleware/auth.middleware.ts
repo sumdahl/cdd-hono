@@ -2,7 +2,7 @@ import { MiddlewareHandler } from "hono";
 import { createMiddleware } from "hono/factory";
 import jwt from "jsonwebtoken";
 import { env } from "../../../config/env";
-import { AppError } from "./error-handler";
+import { AppError } from "../../../core/errors";
 
 type JwtPayload = {
   sub: string;

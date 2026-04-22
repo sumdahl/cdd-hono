@@ -1,5 +1,5 @@
 import { IUserRepository } from "../../repositories/user.repository";
-import { AppError } from "../../../infrastructure/http/middleware/error-handler";
+import { AppError } from "../../../core/errors";
 
 export class MeUseCase {
   constructor(private readonly userRepository: IUserRepository) {}

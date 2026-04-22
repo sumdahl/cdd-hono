@@ -15,6 +15,10 @@ import {
 } from "./auth.schemas";
 import { authMiddleware } from "../middleware/auth.middleware";
 
+import { successResponseSchema } from "../response/response.schemas";
+import { successHandler } from "../response/response.handler";
+import { formatError } from "../response/response.formatter";
+
 export function createAuthRouter(
   register: RegisterUseCase,
   login: LoginUseCase,
@@ -26,23 +30,19 @@ export function createAuthRouter(
     defaultHook: (result, c) => {
       if (!result.success) {
         return c.json(
-          {
-            success: false,
-            error: {
-              code: "VALIDATION_ERROR",
-              message: "Invalid request data",
-              details: result.error.issues.map((i) => ({
-                path: i.path.join("."),
-                message: i.message,
-              })),
-            },
-          },
+          formatError(
+            "VALIDATION_ERROR",
+            "Invalid request data",
+            result.error.issues.map((i) => ({
+              path: i.path.join("."),
+              message: i.message,
+            })),
+          ),
           422,
         );
       }
     },
   });
-
   const registerRoute = createRoute({
     method: "post",
     path: "/register",
@@ -55,14 +55,15 @@ export function createAuthRouter(
       201: {
         content: {
           "application/json": {
-            schema: z.object({ user: userResponseSchema }),
+            schema: successResponseSchema(
+              z.object({ user: userResponseSchema }),
+            ),
           },
         },
         description: "User registered successfully",
       },
     },
   });
-
   const loginRoute = createRoute({
     method: "post",
     path: "/login",
@@ -73,12 +74,15 @@ export function createAuthRouter(
     },
     responses: {
       200: {
-        content: { "application/json": { schema: authResponseSchema } },
+        content: {
+          "application/json": {
+            schema: successResponseSchema(authResponseSchema),
+          },
+        },
         description: "Login successful",
       },
     },
   });
-
   const refreshRoute = createRoute({
     method: "post",
     path: "/refresh",
@@ -89,12 +93,15 @@ export function createAuthRouter(
     },
     responses: {
       200: {
-        content: { "application/json": { schema: accessTokenResponseSchema } },
+        content: {
+          "application/json": {
+            schema: successResponseSchema(accessTokenResponseSchema),
+          },
+        },
         description: "Token refreshed successfully",
       },
     },
   });
-
   const logoutRoute = createRoute({
     method: "post",
     path: "/logout",
@@ -107,7 +114,7 @@ export function createAuthRouter(
       200: {
         content: {
           "application/json": {
-            schema: z.object({ success: z.literal(true) }),
+            schema: successResponseSchema(z.object({})),
           },
         },
         description: "Logged out successfully",
@@ -125,7 +132,9 @@ export function createAuthRouter(
       200: {
         content: {
           "application/json": {
-            schema: z.object({ user: userResponseSchema }),
+            schema: successResponseSchema(
+              z.object({ user: userResponseSchema }),
+            ),
           },
         },
         description: "Current user",
@@ -136,31 +145,36 @@ export function createAuthRouter(
   router.openapi(registerRoute, async (c) => {
     const input = c.req.valid("json");
     const user = await register.execute(input);
-    return c.json({ user }, 201);
+
+    return successHandler(c, { user }, "User registered successfully", 201);
   });
 
   router.openapi(loginRoute, async (c) => {
     const input = c.req.valid("json");
     const result = await login.execute(input);
-    return c.json(result);
+
+    return successHandler(c, result, "Login successful");
   });
 
   router.openapi(refreshRoute, async (c) => {
     const { refreshToken } = c.req.valid("json");
     const result = await refresh.execute(refreshToken);
-    return c.json(result);
+
+    return successHandler(c, result, "Token refreshed");
   });
 
   router.openapi(logoutRoute, async (c) => {
     const { refreshToken } = c.req.valid("json");
     await logout.execute(refreshToken);
-    return c.json({ success: true as const });
+
+    return successHandler(c, {}, "Logged out successfully");
   });
 
   router.openapi(meRoute, async (c) => {
     const userId = c.get("userId");
     const user = await me.execute(userId);
-    return c.json({ user });
+
+    return successHandler(c, { user });
   });
 
   return router;

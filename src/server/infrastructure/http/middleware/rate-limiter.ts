@@ -1,5 +1,5 @@
 import type { MiddlewareHandler, Context } from "hono";
-import { formatError } from "./error-handler";
+import { formatError } from "../response/response.formatter";
 
 export type RateLimiterOptions = {
   limit: number;

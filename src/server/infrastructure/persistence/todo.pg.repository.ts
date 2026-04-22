@@ -2,7 +2,7 @@ import { DB } from "../db";
 import { todos } from "./schema/todo.schema";
 import { ITodoRepository } from "../../core/repositories/todo.repository";
 import { TodoEntity } from "../../core/entities/todo.entity";
-import { AppError } from "../http/middleware/error-handler";
+import { AppError } from "../../core/errors";
 
 export class PostgresTodoRepository implements ITodoRepository {
   constructor(private readonly db: DB) {}

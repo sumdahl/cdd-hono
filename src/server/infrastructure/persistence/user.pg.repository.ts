@@ -3,7 +3,7 @@ import { DB } from "../db";
 import { users, refreshTokens } from "./schema/user.schema";
 import { IUserRepository } from "../../core/repositories/user.repository";
 import { UserEntity } from "../../core/entities/user.entity";
-import { AppError } from "../http/middleware/error-handler";
+import { AppError } from "../../core/errors";
 
 export class PostgresUserRepository implements IUserRepository {
   constructor(private readonly db: DB) {}

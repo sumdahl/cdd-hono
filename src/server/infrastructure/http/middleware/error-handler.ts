@@ -1,33 +1,6 @@
 import { Context } from "hono";
-
-export type ApiErrorResponse = {
-  success: false;
-  error: {
-    code: string;
-    message: string;
-    details?: unknown;
-  };
-};
-
-export const formatError = (
-  code: string,
-  message: string,
-  details?: unknown,
-): ApiErrorResponse => ({
-  success: false,
-  error: { code, message, details },
-});
-
-export class AppError extends Error {
-  constructor(
-    public readonly code: string,
-    public readonly message: string,
-    public readonly statusCode: 400 | 401 | 404 | 409 | 422 | 500 = 400,
-  ) {
-    super(message);
-    this.name = "AppError";
-  }
-}
+import { AppError } from "../../../core/errors";
+import { formatError } from "../response/response.formatter";
 
 export const errorHandler = (err: Error, c: Context) => {
   console.error(`[ERROR] ${c.req.method} ${c.req.path}:`, err.message);
