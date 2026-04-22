@@ -1,48 +1,27 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
-import { cors } from "hono/cors";
 import { todoRouter } from "./infrastructure/http/todos";
 import { authRouter } from "./infrastructure/http/auth";
 import { healthRouter } from "./infrastructure/http/health/health.routes";
+import { corsMiddleware } from "./infrastructure/http/middleware/cors";
 import { requestLogger } from "./infrastructure/http/middleware/logger";
 import { rateLimiter } from "./infrastructure/http/middleware/rate-limiter";
 import { errorHandler } from "./infrastructure/http/middleware/error-handler";
 import { ErrorCode } from "./core/errors";
 
-const apiRouter = new OpenAPIHono().basePath("/api/v1");
+export const app = new OpenAPIHono().basePath("/api/v1");
 
-apiRouter.use(
+app.use("*", corsMiddleware);
+app.use(
   "*",
-  cors({
-    origin: ["http://localhost:3000", "http://localhost:5173"],
-    allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowHeaders: ["Content-Type", "Authorization"],
-    exposeHeaders: ["Content-Length"],
-    maxAge: 86400,
-    credentials: true,
-  }),
+  rateLimiter({ limit: 100, windowMs: 60_000, keyPrefix: "global" }),
 );
-
-apiRouter.use(
-  "*",
-  rateLimiter({
-    limit: 100,
-    windowMs: 60_000,
-    keyPrefix: "global",
-  }),
-);
-
-apiRouter.use(
+app.use(
   "/auth/*",
-  rateLimiter({
-    limit: 10,
-    windowMs: 60_000,
-    keyPrefix: "auth-routes",
-  }),
+  rateLimiter({ limit: 10, windowMs: 60_000, keyPrefix: "auth-routes" }),
 );
+app.use("*", requestLogger);
 
-apiRouter.use("*", requestLogger);
-
-apiRouter.notFound((c) =>
+app.notFound((c) =>
   c.json(
     {
       success: false,
@@ -55,10 +34,8 @@ apiRouter.notFound((c) =>
   ),
 );
 
-apiRouter.route("/health", healthRouter);
-apiRouter.route("/auth", authRouter);
-apiRouter.route("/todos", todoRouter);
+app.route("/health", healthRouter);
+app.route("/auth", authRouter);
+app.route("/todos", todoRouter);
 
-export const appRouter = new OpenAPIHono();
-appRouter.route("/", apiRouter);
-appRouter.onError(errorHandler);
+app.onError(errorHandler);
