@@ -2,7 +2,7 @@ import { describe, it, expect, mock } from "bun:test";
 import { RefreshUseCase } from "../../../../src/server/core/use-cases/auth/refresh";
 import { IUserRepository } from "../../../../src/server/core/repositories/user.repository";
 import { UserEntity } from "../../../../src/server/core/entities/user.entity";
-import { AppError } from "../../../../src/server/infrastructure/http/middleware/error-handler";
+import { AppError, ErrorCode } from "../../../../src/server/core/errors";
 import jwt from "jsonwebtoken";
 
 const mockUser = new UserEntity(

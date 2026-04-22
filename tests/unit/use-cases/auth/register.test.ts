@@ -2,7 +2,7 @@ import { describe, it, expect, mock, beforeEach } from "bun:test";
 import { RegisterUseCase } from "../../../../src/server/core/use-cases/auth/register";
 import { IUserRepository } from "../../../../src/server/core/repositories/user.repository";
 import { UserEntity } from "../../../../src/server/core/entities/user.entity";
-import { AppError } from "../../../../src/server/infrastructure/http/middleware/error-handler";
+import { AppError, ErrorCode } from "../../../../src/server/core/errors";
 
 const mockUser = new UserEntity(
   "1",

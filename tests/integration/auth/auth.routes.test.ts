@@ -37,10 +37,9 @@ describe("POST /api/v1/auth/register", () => {
       }),
     });
     const body = await res.json();
-
     expect(res.status).toBe(201);
-    expect(body.user.email).toBe("test@example.com");
-    expect(body.user).not.toHaveProperty("passwordHash");
+    expect(body.data.user.email).toBe("test@example.com");
+    expect(body.data.user).not.toHaveProperty("passwordHash");
   });
 
   it("should return 422 on invalid input", async () => {
@@ -54,7 +53,6 @@ describe("POST /api/v1/auth/register", () => {
       }),
     });
     const body = await res.json();
-
     expect(res.status).toBe(422);
     expect(body.error.code).toBe("VALIDATION_ERROR");
   });
@@ -71,10 +69,9 @@ describe("POST /api/v1/auth/login", () => {
       }),
     });
     const body = await res.json();
-
     expect(res.status).toBe(200);
-    expect(body).toHaveProperty("accessToken");
-    expect(body).toHaveProperty("refreshToken");
+    expect(body.data).toHaveProperty("accessToken");
+    expect(body.data).toHaveProperty("refreshToken");
   });
 
   it("should return 401 on wrong password", async () => {
@@ -87,7 +84,6 @@ describe("POST /api/v1/auth/login", () => {
       }),
     });
     const body = await res.json();
-
     expect(res.status).toBe(401);
     expect(body.error.code).toBe("INVALID_CREDENTIALS");
   });
