@@ -8,20 +8,18 @@ import {
 } from "./infrastructure/http/middleware/error-handler";
 import { healthRouter } from "./infrastructure/http/health/health.routes";
 
-export const appRouter = new OpenAPIHono().basePath("/api/v1");
+const apiRouter = new OpenAPIHono().basePath("/api/v1");
 
-appRouter.use("*", requestLogger);
+apiRouter.use("*", requestLogger);
 
-appRouter.onError((err, c) => {
+apiRouter.onError((err, c) => {
   console.error(`[ERROR] ${c.req.method} ${c.req.path}:`, err.message);
-
   if (err instanceof AppError) {
     return c.json(
       formatError(err.code, err.message),
       err.statusCode as 400 | 401 | 404 | 409 | 422 | 500,
     );
   }
-
   if (err.name === "ZodError") {
     try {
       const issues = JSON.parse(err.message);
@@ -43,14 +41,13 @@ appRouter.onError((err, c) => {
       );
     }
   }
-
   return c.json(
     formatError("INTERNAL_SERVER_ERROR", "Something went wrong"),
     500,
   );
 });
 
-appRouter.notFound((c) => {
+apiRouter.notFound((c) => {
   return c.json(
     {
       success: false,
@@ -63,6 +60,9 @@ appRouter.notFound((c) => {
   );
 });
 
-appRouter.route("/todos", todoRouter);
-appRouter.route("/health", healthRouter);
-appRouter.route("/auth", authRouter);
+apiRouter.route("/todos", todoRouter);
+apiRouter.route("/health", healthRouter);
+apiRouter.route("/auth", authRouter);
+
+export const appRouter = new OpenAPIHono();
+appRouter.route("/", apiRouter);
