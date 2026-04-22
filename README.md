@@ -14,16 +14,16 @@ Production-grade REST API boilerplate built with Clean (Hexagonal) Architecture 
 
 ## Features
 
-- ✅ Hexagonal architecture — core never imports infrastructure
-- ✅ Contract-first OpenAPI — routes defined from Zod schemas, spec auto-generated
-- ✅ JWT auth — access token + refresh token rotation
-- ✅ Typed error codes — `ErrorCode` const map, no raw strings
-- ✅ Centralized error handling — `AppError` domain errors, graceful HTTP responses
-- ✅ Awilix DI container — single composition root, fully typed `Cradle`
-- ✅ Request ID — every request tagged, logged, and returned as `X-Request-Id`
-- ✅ Deep health check — verifies DB connectivity, returns latency + `503` on failure
-- ✅ Versioned OpenAPI spec export — `bun run export:spec`
-- ✅ Unit + integration test suite — in-memory repositories, no DB required for tests
+-  Hexagonal architecture — core never imports infrastructure
+-  Contract-first OpenAPI — routes defined from Zod schemas, spec auto-generated
+-  JWT auth — access token + refresh token rotation
+-  Typed error codes — `ErrorCode` const map, no raw strings
+-  Centralized error handling — `AppError` domain errors, graceful HTTP responses
+-  Awilix DI container — single composition root, fully typed `Cradle`
+-  Request ID — every request tagged, logged, and returned as `X-Request-Id`
+-  Deep health check — verifies DB connectivity, returns latency + `503` on failure
+-  Versioned OpenAPI spec export — `bun run export:spec`
+-  Unit + integration test suite — in-memory repositories, no DB required for tests
 
 ## Architecture
 
