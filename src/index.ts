@@ -1,46 +1,28 @@
-import express from "express";
-import * as trpcExpress from "@trpc/server/adapters/express";
-import {
-  generateOpenApiDocument,
-  createOpenApiExpressMiddleware,
-} from "trpc-to-openapi";
-import { appRouter } from "./server";
-import { createContext } from "./server/context";
-import fs from "fs/promises";
+import "./server/config/env";
+import { swaggerUI } from "@hono/swagger-ui";
+import { app } from "./server";
+import { env } from "./server/config/env";
 
-const app = express();
-const PORT = 8000;
-
-app.use(express.json());
-
-app.use(
-  "/trpc",
-  trpcExpress.createExpressMiddleware({
-    router: appRouter,
-    createContext,
-  }),
-);
-
-app.use(
-  "/api",
-  createOpenApiExpressMiddleware({
-    router: appRouter,
-    createContext,
-  }),
-);
-
-const openApiDocument = generateOpenApiDocument(appRouter, {
-  title: "Contract-Driven API Development with tRPC and OpenAPI",
-  version: "1.0.0",
-  baseUrl: "http://localhost:8000/api",
+const openApiDoc = app.getOpenAPIDocument({
+  openapi: "3.0.0",
+  info: {
+    title: "Contract-Driven API Development with Hono and OpenAPI",
+    version: "1.0.0",
+  },
+  servers: [
+    {
+      url: `http://localhost:${env.PORT}`,
+      description: "Local development server",
+    },
+  ],
 });
 
-fs.writeFile("./openapi-specs.json", JSON.stringify(openApiDocument, null, 2));
+await Bun.write("./openapi-specs.json", JSON.stringify(openApiDoc, null, 2));
 
-app.get("/openapi.json", (_, res) => {
-  return res.json(openApiDocument);
-});
+app.get("/openapi.json", (c) => c.json(openApiDoc));
+app.get("/docs", swaggerUI({ url: "/openapi.json" }));
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port: ${PORT}`);
-});
+export default {
+  port: env.PORT,
+  fetch: app.fetch,
+};

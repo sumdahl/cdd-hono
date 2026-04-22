@@ -1,69 +1,81 @@
-# Contract-Driven API Development
+# contract-driven-api-development
 
-Demonstration of contract-driven API development using tRPC for type-safe endpoints with automatic OpenAPI specification generation.
-
-## Table of Contents
-
-- [About](#about)
-- [Features](#features)
-- [Prerequisites](#prerequisites)
-- [Installation](#installation)
-- [Usage](#usage)
-- [License](#license)
-
-## About
-
-This project showcases modern contract-driven API development patterns where API contracts are defined once in TypeScript using Zod schemas, and automatically used to generate:
-- Fully type-safe tRPC endpoints
-- Validated REST API endpoints
-- Complete OpenAPI 3.0 specification
-- Runtime input validation
-
-Built with Node.js, Express, tRPC, Zod, and `trpc-to-openapi`.
+Production-grade REST API boilerplate following Clean Architecture and contract-driven development principles.
 
 ## Features
+- ✅ Bun runtime + Hono web framework
+- ✅ Drizzle ORM with PostgreSQL
+- ✅ Zod schema validation + auto-generated OpenAPI/Swagger
+- ✅ JWT authentication (access + refresh tokens)
+- ✅ Fully decoupled business logic from infrastructure
+- ✅ Unit + integration test suite
 
- **Single Source of Truth** - Define schemas once, use everywhere  
- **Type Safety** - End-to-end TypeScript safety for all API operations  
- **Automatic Documentation** - OpenAPI spec generated at runtime from tRPC routers  
- **Dual API Support** - Both tRPC and REST endpoints available  
- **Runtime Validation** - Zod ensures all incoming request data matches schema  
- **Extensible Architecture** - Clean router composition pattern for adding new endpoints  
+## Architecture
+Clean Architecture with strict dependency rule: core layer never imports infrastructure. Swap databases or frameworks without changing business logic.
+```
+src/server/
+├── core/               # Entities, repository interfaces, use cases
+└── infrastructure/     # DB client, schemas, HTTP routes, middleware
+```
 
-## Prerequisites
+## API Endpoints
+```
+# Auth
+POST   /api/v1/auth/register
+POST   /api/v1/auth/login
+POST   /api/v1/auth/refresh
+POST   /api/v1/auth/logout
+GET    /api/v1/auth/me       ← protected
 
-- Node.js 18+
-- pnpm 8+
+# Public
+GET    /api/v1/health
+GET    /docs                 ← Swagger UI
+GET    /openapi.json
+```
 
-## Installation
+## Getting Started
+**Prerequisites:** Bun, Docker
 
-1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone https://github.com/sumdahl/trpc-cdd
 cd contract-driven-api-development
+
+bun install
+cp .env.example .env
+
+docker compose up -d
+bun db:generate
+bun db:migrate
+
+bun dev
 ```
 
-2. Install dependencies:
+## Scripts
 ```bash
-pnpm install
+bun dev              # Development watch mode
+bun start            # Production start
+bun test             # Run all tests
+bun test --coverage  # Coverage report
+bun db:studio        # Drizzle Studio
+bun build            # Production build
 ```
 
-## Usage
-
-Start the development server:
-```bash
-pnpm run dev
+## Environment Variables
+```env
+DATABASE_URL=postgres://postgres:postgres@localhost:5432/cdd
+PORT=8000
+NODE_ENV=development
+JWT_ACCESS_SECRET=
+JWT_REFRESH_SECRET=
+JWT_ACCESS_EXPIRES_IN=15m
+JWT_REFRESH_EXPIRES_IN=7d
 ```
 
-The server will start on `http://localhost:3000` with:
-
-| Endpoint | Purpose |
-|----------|---------|
-| `/trpc` | tRPC HTTP endpoint |
-| `/api` | REST API endpoints (auto-generated) |
-| `/openapi.json` | Generated OpenAPI 3.0 specification |
-
-The full OpenAPI specification is available at `/openapi.json` when the server is running. You can import this file into Postman, Swagger UI, or any OpenAPI-compatible tool.
+## Tests
+23 passing tests across 9 files:
+- **Unit:** Pure business logic for auth and todos use cases
+- **Integration:** Full HTTP request flow validation
 
 ## License
+
 ISC
