@@ -9,4 +9,5 @@ export interface IUserRepository {
     passwordHash: string;
   }): Promise<UserEntity>;
   markAsVerified(userId: string): Promise<void>;
+  updatePassword(userId: string, passwordHash: string): Promise<void>;
 }

@@ -91,4 +91,16 @@ export class PostgresUserRepository implements IUserRepository {
       throw new AppError(ErrorCode.DB_ERROR, "Failed to verify user", 500);
     }
   }
+
+  async updatePassword(userId: string, passwordHash: string): Promise<void> {
+    try {
+      await this.db
+        .update(users)
+        .set({ passwordHash })
+        .where(eq(users.id, userId));
+    } catch (err) {
+      console.error("[DB] updatePassword failed:", err);
+      throw new AppError(ErrorCode.DB_ERROR, "Failed to update password", 500);
+    }
+  }
 }

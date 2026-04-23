@@ -42,4 +42,18 @@ export class InMemoryUserRepository implements IUserRepository {
       u.createdAt,
     );
   }
+
+  async updatePassword(userId: string, passwordHash: string): Promise<void> {
+    const index = this.users.findIndex((u) => u.id === userId);
+    if (index === -1) return;
+    const u = this.users[index];
+    this.users[index] = new UserEntity(
+      u.id,
+      u.email,
+      u.name,
+      passwordHash,
+      u.isVerified,
+      u.createdAt,
+    );
+  }
 }

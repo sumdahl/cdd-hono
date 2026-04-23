@@ -35,6 +35,17 @@ export const verificationTokens = pgTable("verification_tokens", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const passwordResetTokens = pgTable("password_reset_tokens", {
+  id: varchar("id").primaryKey(),
+  userId: varchar("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  token: text("token").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export type UserRecord = typeof users.$inferSelect;
 export type RefreshTokenRecord = typeof refreshTokens.$inferSelect;
 export type VerificationTokenRecord = typeof verificationTokens.$inferSelect;
+export type PasswordResetTokenRecord = typeof passwordResetTokens.$inferSelect;

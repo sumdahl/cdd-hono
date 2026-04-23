@@ -6,6 +6,8 @@ import { LogoutUseCase } from "../../../core/use-cases/auth/logout";
 import { MeUseCase } from "../../../core/use-cases/auth/me";
 import { VerifyEmailUseCase } from "../../../core/use-cases/auth/verify-email";
 import { ResendVerificationUseCase } from "../../../core/use-cases/auth/resend-verification";
+import { ForgotPasswordUseCase } from "../../../core/use-cases/auth/forgot-password";
+import { ResetPasswordUseCase } from "../../../core/use-cases/auth/reset-password";
 import {
   registerSchema,
   loginSchema,
@@ -13,6 +15,8 @@ import {
   logoutSchema,
   verifyEmailSchema,
   resendVerificationSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
   authResponseSchema,
   accessTokenResponseSchema,
   userResponseSchema,
@@ -33,6 +37,8 @@ export function createAuthRouter(
   me: MeUseCase,
   verifyEmail: VerifyEmailUseCase,
   resendVerification: ResendVerificationUseCase,
+  forgotPassword: ForgotPasswordUseCase,
+  resetPassword: ResetPasswordUseCase,
 ) {
   const router = createAppRouter();
 
@@ -240,6 +246,63 @@ export function createAuthRouter(
     },
   });
 
+  const forgotPasswordRoute = createRoute({
+    method: "post",
+    path: "/forgot-password",
+    tags: ["Auth"],
+    description:
+      "Request a password reset email — always returns 200 to avoid leaking user existence",
+    request: {
+      body: {
+        content: { "application/json": { schema: forgotPasswordSchema } },
+      },
+    },
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: successResponseSchema(z.object({})),
+          },
+        },
+        description: "Password reset email sent if account exists",
+      },
+      422: {
+        content: { "application/json": { schema: errorResponseSchema } },
+        description: "Validation error",
+      },
+    },
+  });
+
+  const resetPasswordRoute = createRoute({
+    method: "post",
+    path: "/reset-password",
+    tags: ["Auth"],
+    description: "Reset password using token from email",
+    request: {
+      body: {
+        content: { "application/json": { schema: resetPasswordSchema } },
+      },
+    },
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: successResponseSchema(z.object({})),
+          },
+        },
+        description: "Password reset successfully",
+      },
+      400: {
+        content: { "application/json": { schema: errorResponseSchema } },
+        description: "Invalid or expired reset token",
+      },
+      422: {
+        content: { "application/json": { schema: errorResponseSchema } },
+        description: "Validation error",
+      },
+    },
+  });
+
   router.openapi(registerRoute, async (c) => {
     const input = c.req.valid("json");
     const user = await register.execute(input);
@@ -285,6 +348,22 @@ export function createAuthRouter(
     const { email } = c.req.valid("json");
     await resendVerification.execute(email);
     return successHandler(c, {}, "Verification email sent");
+  });
+
+  router.openapi(forgotPasswordRoute, async (c) => {
+    const { email } = c.req.valid("json");
+    await forgotPassword.execute(email);
+    return successHandler(
+      c,
+      {},
+      "If that email is registered, a reset link has been sent",
+    );
+  });
+
+  router.openapi(resetPasswordRoute, async (c) => {
+    const input = c.req.valid("json");
+    await resetPassword.execute(input);
+    return successHandler(c, {}, "Password reset successfully");
   });
 
   return router;

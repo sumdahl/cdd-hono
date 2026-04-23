@@ -30,6 +30,12 @@ export class MockEmailService implements IEmailService {
     );
   }
 
+  getLastPasswordResetEmail() {
+    return (
+      this.sentEmails.filter((e) => e.type === "passwordReset").at(-1) ?? null
+    );
+  }
+
   reset() {
     this.sentEmails = [];
   }
