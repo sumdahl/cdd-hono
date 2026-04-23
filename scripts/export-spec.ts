@@ -14,7 +14,7 @@ const openApiDoc = app.getOpenAPIDocument({
   },
   servers: [
     {
-      url: `http://localhost:${env.PORT}/api/v1`,
+      url: `http://localhost:${env.PORT}`, //was `http://localhost:${env.PORT}/api/v1`
       description: "Local development server",
     },
     {
