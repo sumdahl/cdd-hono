@@ -19,6 +19,14 @@ export const logoutSchema = z.object({
   refreshToken: z.string().min(1, "Refresh token is required"),
 });
 
+export const verifyEmailSchema = z.object({
+  token: z.string().min(1, "Token is required"),
+});
+
+export const resendVerificationSchema = z.object({
+  email: z.email("Invalid email"),
+});
+
 export const userResponseSchema = z.object({
   id: z.string(),
   email: z.string(),

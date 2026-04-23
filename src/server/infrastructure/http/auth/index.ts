@@ -7,6 +7,8 @@ const {
   refreshUseCase,
   logoutUseCase,
   meUseCase,
+  verifyEmailUseCase,
+  resendVerificationUseCase,
 } = container.cradle;
 
 export const authRouter = createAuthRouter(
@@ -15,4 +17,6 @@ export const authRouter = createAuthRouter(
   refreshUseCase,
   logoutUseCase,
   meUseCase,
+  verifyEmailUseCase,
+  resendVerificationUseCase,
 );

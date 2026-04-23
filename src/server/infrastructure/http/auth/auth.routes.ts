@@ -4,11 +4,15 @@ import { LoginUseCase } from "../../../core/use-cases/auth/login";
 import { RefreshUseCase } from "../../../core/use-cases/auth/refresh";
 import { LogoutUseCase } from "../../../core/use-cases/auth/logout";
 import { MeUseCase } from "../../../core/use-cases/auth/me";
+import { VerifyEmailUseCase } from "../../../core/use-cases/auth/verify-email";
+import { ResendVerificationUseCase } from "../../../core/use-cases/auth/resend-verification";
 import {
   registerSchema,
   loginSchema,
   refreshSchema,
   logoutSchema,
+  verifyEmailSchema,
+  resendVerificationSchema,
   authResponseSchema,
   accessTokenResponseSchema,
   userResponseSchema,
@@ -27,6 +31,8 @@ export function createAuthRouter(
   refresh: RefreshUseCase,
   logout: LogoutUseCase,
   me: MeUseCase,
+  verifyEmail: VerifyEmailUseCase,
+  resendVerification: ResendVerificationUseCase,
 ) {
   const router = createAppRouter();
 
@@ -34,7 +40,7 @@ export function createAuthRouter(
     method: "post",
     path: "/register",
     tags: ["Auth"],
-    description: "Register a new user",
+    description: "Register a new user — sends a verification email",
     request: {
       body: { content: { "application/json": { schema: registerSchema } } },
     },
@@ -80,6 +86,10 @@ export function createAuthRouter(
       401: {
         content: { "application/json": { schema: errorResponseSchema } },
         description: "Invalid credentials",
+      },
+      403: {
+        content: { "application/json": { schema: errorResponseSchema } },
+        description: "Email not verified",
       },
       422: {
         content: { "application/json": { schema: errorResponseSchema } },
@@ -168,10 +178,77 @@ export function createAuthRouter(
     },
   });
 
+  const verifyEmailRoute = createRoute({
+    method: "get",
+    path: "/verify-email",
+    tags: ["Auth"],
+    description: "Verify email address using token from email link",
+    request: {
+      query: verifyEmailSchema,
+    },
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: successResponseSchema(z.object({})),
+          },
+        },
+        description: "Email verified successfully",
+      },
+      400: {
+        content: { "application/json": { schema: errorResponseSchema } },
+        description: "Invalid or expired verification token",
+      },
+      409: {
+        content: { "application/json": { schema: errorResponseSchema } },
+        description: "Email already verified",
+      },
+    },
+  });
+
+  const resendVerificationRoute = createRoute({
+    method: "post",
+    path: "/resend-verification",
+    tags: ["Auth"],
+    description: "Resend verification email",
+    request: {
+      body: {
+        content: { "application/json": { schema: resendVerificationSchema } },
+      },
+    },
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: successResponseSchema(z.object({})),
+          },
+        },
+        description: "Verification email resent",
+      },
+      404: {
+        content: { "application/json": { schema: errorResponseSchema } },
+        description: "User not found",
+      },
+      409: {
+        content: { "application/json": { schema: errorResponseSchema } },
+        description: "Email already verified",
+      },
+      422: {
+        content: { "application/json": { schema: errorResponseSchema } },
+        description: "Validation error",
+      },
+    },
+  });
+
   router.openapi(registerRoute, async (c) => {
     const input = c.req.valid("json");
     const user = await register.execute(input);
-    return successHandler(c, { user }, "User registered successfully", 201);
+    return successHandler(
+      c,
+      { user },
+      "Registration successful. Please check your email to verify your account.",
+      201,
+    );
   });
 
   router.openapi(loginRoute, async (c) => {
@@ -196,6 +273,18 @@ export function createAuthRouter(
     const userId = c.get("userId");
     const user = await me.execute(userId);
     return successHandler(c, { user });
+  });
+
+  router.openapi(verifyEmailRoute, async (c) => {
+    const { token } = c.req.valid("query");
+    await verifyEmail.execute(token);
+    return successHandler(c, {}, "Email verified successfully");
+  });
+
+  router.openapi(resendVerificationRoute, async (c) => {
+    const { email } = c.req.valid("json");
+    await resendVerification.execute(email);
+    return successHandler(c, {}, "Verification email sent");
   });
 
   return router;

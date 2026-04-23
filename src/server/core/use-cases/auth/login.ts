@@ -30,6 +30,14 @@ export class LoginUseCase {
       );
     }
 
+    if (!user.isVerified) {
+      throw new AppError(
+        ErrorCode.EMAIL_NOT_VERIFIED,
+        "Please verify your email before logging in",
+        403,
+      );
+    }
+
     const accessToken = jwt.sign(
       { sub: user.id, email: user.email },
       env.JWT_ACCESS_SECRET,

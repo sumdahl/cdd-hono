@@ -4,6 +4,7 @@ export class UserEntity {
     public readonly email: string,
     public readonly name: string,
     public readonly passwordHash: string,
+    public readonly isVerified: boolean,
     public readonly createdAt: Date,
   ) {}
 }

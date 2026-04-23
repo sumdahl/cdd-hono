@@ -15,6 +15,20 @@
       "when": 1776771230881,
       "tag": "0001_groovy_glorian",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1776933421745,
+      "tag": "0002_gorgeous_mastermind",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1776933506751,
+      "tag": "0003_bent_venus",
+      "breakpoints": true
     }
   ]
 }

@@ -10,10 +10,12 @@ const envSchema = z.object({
   JWT_REFRESH_SECRET: z.string().min(1),
   JWT_ACCESS_EXPIRES_IN: z.string().default("15m"),
   JWT_REFRESH_EXPIRES_IN: z.string().default("7d"),
+  RESEND_KEY: z.string().min(1),
+  EMAIL_FROM: z.string().default("noreply@sumirandahal.com.np"),
+  APP_URL: z.string().default("http://localhost:8000"),
 });
 
 const parsed = envSchema.safeParse(process.env);
-
 if (!parsed.success) {
   console.error(" Invalid environment variables:");
   console.error(parsed.error.flatten().fieldErrors);

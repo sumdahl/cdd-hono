@@ -23,6 +23,7 @@ export class PostgresUserRepository implements IUserRepository {
         row.email,
         row.name,
         row.passwordHash,
+        row.isVerified,
         row.createdAt,
       );
     } catch (err) {
@@ -43,6 +44,7 @@ export class PostgresUserRepository implements IUserRepository {
         row.email,
         row.name,
         row.passwordHash,
+        row.isVerified,
         row.createdAt,
       );
     } catch (err) {
@@ -66,6 +68,7 @@ export class PostgresUserRepository implements IUserRepository {
         row.email,
         row.name,
         row.passwordHash,
+        row.isVerified,
         row.createdAt,
       );
     } catch (err) {
@@ -74,6 +77,18 @@ export class PostgresUserRepository implements IUserRepository {
         throw new AppError(ErrorCode.EMAIL_TAKEN, "Email already in use", 409);
       }
       throw new AppError(ErrorCode.DB_ERROR, "Failed to create user", 500);
+    }
+  }
+
+  async markAsVerified(userId: string): Promise<void> {
+    try {
+      await this.db
+        .update(users)
+        .set({ isVerified: true })
+        .where(eq(users.id, userId));
+    } catch (err) {
+      console.error("[DB] markAsVerified failed:", err);
+      throw new AppError(ErrorCode.DB_ERROR, "Failed to verify user", 500);
     }
   }
 }
