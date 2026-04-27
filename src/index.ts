@@ -1,5 +1,6 @@
 import "./server/config/env";
 import { swaggerUI } from "@hono/swagger-ui";
+import { Hono } from "hono";
 import { app } from "./server";
 import { env } from "./server/config/env";
 
@@ -18,10 +19,13 @@ const openApiDoc = app.getOpenAPIDocument({
   ],
 });
 
-app.get("/openapi.json", (c) => c.json(openApiDoc));
-app.get("/docs", swaggerUI({ url: "/openapi.json" }));
+const root = new Hono();
+
+root.get("/openapi.json", (c) => c.json(openApiDoc));
+root.get("/docs", swaggerUI({ url: "/openapi.json" }));
+root.route("/", app);
 
 export default {
   port: env.PORT,
-  fetch: app.fetch,
+  fetch: root.fetch,
 };
