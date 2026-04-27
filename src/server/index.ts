@@ -6,6 +6,7 @@ import { requestLogger } from "./infrastructure/http/middleware/logger";
 import { rateLimiter } from "./infrastructure/http/middleware/rate-limiter";
 import { errorHandler } from "./infrastructure/http/middleware/error-handler";
 import { ErrorCode } from "./core/errors";
+import { adminRouter } from "./infrastructure/http/admin";
 
 export const app = new OpenAPIHono().basePath("/api/v1");
 
@@ -35,5 +36,6 @@ app.notFound((c) =>
 
 app.route("/health", healthRouter);
 app.route("/auth", authRouter);
+app.route("/admin", adminRouter);
 
 app.onError(errorHandler);

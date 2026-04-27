@@ -15,6 +15,12 @@ import { VerifyEmailUseCase } from "../../core/use-cases/auth/verify-email";
 import { ResendVerificationUseCase } from "../../core/use-cases/auth/resend-verification";
 import { ForgotPasswordUseCase } from "../../core/use-cases/auth/forgot-password";
 import { ResetPasswordUseCase } from "../../core/use-cases/auth/reset-password";
+import { GetAllUsersUseCase } from "../../core/use-cases/admin/get-all-users";
+import { GetUserByIdUseCase } from "../../core/use-cases/admin/get-user-by-id";
+import { DeleteUserUseCase } from "../../core/use-cases/admin/delete-user";
+import { GetAllRolesUseCase } from "../../core/use-cases/admin/get-all-roles";
+import { AssignRoleUseCase } from "../../core/use-cases/admin/assign-role";
+import { RemoveRoleUseCase } from "../../core/use-cases/admin/remove-role";
 import { Cradle } from "./types";
 
 export const container = createContainer<Cradle>({
@@ -49,4 +55,12 @@ container.register({
   resendVerificationUseCase: asClass(ResendVerificationUseCase).singleton(),
   forgotPasswordUseCase: asClass(ForgotPasswordUseCase).singleton(),
   resetPasswordUseCase: asClass(ResetPasswordUseCase).singleton(),
+
+  // Admin use-cases
+  getAllUsersUseCase: asClass(GetAllUsersUseCase).singleton(),
+  getUserByIdUseCase: asClass(GetUserByIdUseCase).singleton(),
+  deleteUserUseCase: asClass(DeleteUserUseCase).singleton(),
+  getAllRolesUseCase: asClass(GetAllRolesUseCase).singleton(),
+  assignRoleUseCase: asClass(AssignRoleUseCase).singleton(),
+  removeRoleUseCase: asClass(RemoveRoleUseCase).singleton(),
 });

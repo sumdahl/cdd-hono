@@ -56,4 +56,12 @@ export class InMemoryUserRepository implements IUserRepository {
       u.createdAt,
     );
   }
+
+  async findAll(): Promise<UserEntity[]> {
+    return this.users;
+  }
+
+  async delete(userId: string): Promise<void> {
+    this.users = this.users.filter((u) => u.id !== userId);
+  }
 }

@@ -104,4 +104,33 @@ export class PostgresUserRepository implements IUserRepository {
       throw new AppError(ErrorCode.DB_ERROR, "Failed to update password", 500);
     }
   }
+
+  async findAll(): Promise<UserEntity[]> {
+    try {
+      const rows = await this.db.select().from(users);
+      return rows.map(
+        (r) =>
+          new UserEntity(
+            r.id,
+            r.email,
+            r.name,
+            r.passwordHash,
+            r.isVerified,
+            r.createdAt,
+          ),
+      );
+    } catch (err) {
+      logger.error({ err }, "[DB] findAll users failed");
+      throw new AppError(ErrorCode.DB_ERROR, "Failed to find users", 500);
+    }
+  }
+
+  async delete(userId: string): Promise<void> {
+    try {
+      await this.db.delete(users).where(eq(users.id, userId));
+    } catch (err) {
+      logger.error({ err }, "[DB] delete user failed");
+      throw new AppError(ErrorCode.DB_ERROR, "Failed to delete user", 500);
+    }
+  }
 }
