@@ -8,6 +8,7 @@ import { IVerificationTokenRepository } from "../../core/repositories/verificati
 import { IEmailService } from "../../core/services/email.service";
 import { IRateLimiterService } from "../../core/services/rate-limiter.service";
 import { ITokenBlacklistService } from "../../core/services/token-blacklist.service";
+import { ITokenService } from "../../core/services/token.service";
 import { AssignRoleUseCase } from "../../core/use-cases/admin/assign-role";
 import { DeleteUserUseCase } from "../../core/use-cases/admin/delete-user";
 import { GetAllRolesUseCase } from "../../core/use-cases/admin/get-all-roles";
@@ -43,6 +44,7 @@ export interface Cradle {
   // Services
   emailService: IEmailService;
   rateLimiterService: IRateLimiterService;
+  tokenService: ITokenService;
 
   // Auth use-cases
   registerUseCase: RegisterUseCase;

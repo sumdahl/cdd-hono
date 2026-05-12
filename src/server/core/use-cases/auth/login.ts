@@ -2,15 +2,15 @@ import { IUserRepository } from "../../repositories/user.repository";
 import { ITokenRepository } from "../../repositories/token.repository";
 import { IRoleRepository } from "../../repositories/role.repository";
 import { AppError, ErrorCode } from "../../errors";
-import { env } from "../../../config/env";
+import { ITokenService } from "../../services/token.service";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 
 export class LoginUseCase {
   constructor(
     private readonly userRepository: IUserRepository,
     private readonly tokenRepository: ITokenRepository,
     private readonly roleRepository: IRoleRepository,
+    private readonly tokenService: ITokenService,
   ) {}
 
   async execute(data: { email: string; password: string }) {
@@ -43,15 +43,15 @@ export class LoginUseCase {
     const userRoles = await this.roleRepository.findRolesByUserId(user.id);
     const roleNames = userRoles.map((r) => r.name);
 
-    const jti = crypto.randomUUID();
-    const accessToken = jwt.sign(
-      { sub: user.id, email: user.email, roles: roleNames, jti },
-      env.JWT_ACCESS_SECRET,
-      { expiresIn: env.JWT_ACCESS_EXPIRES_IN as jwt.SignOptions["expiresIn"] },
-    );
+    const accessToken = await this.tokenService.generateAccessToken({
+      userId: user.id,
+      email: user.email,
+      roles: roleNames,
+    });
 
-    const refreshToken = jwt.sign({ sub: user.id }, env.JWT_REFRESH_SECRET, {
-      expiresIn: env.JWT_REFRESH_EXPIRES_IN as jwt.SignOptions["expiresIn"],
+    const refreshToken = await this.tokenService.generateRefreshToken({
+      userId: user.id,
+      email: user.email,
     });
 
     const expiresAt = new Date();

@@ -19,6 +19,7 @@ import { InMemoryUserRepository } from "../../mocks/user.in-memory.repository";
 import { InMemoryVerificationTokenRepository } from "../../mocks/verification-token.in-memory.repository";
 import { MockEmailService } from "../../mocks/email.service.mock";
 import { MockRateLimiterService } from "../../mocks/rate-limiter.service.mock";
+import { MockTokenService } from "../../mocks/token.service.mock";
 
 let app: OpenAPIHono;
 let userRepository: InMemoryUserRepository;
@@ -34,6 +35,7 @@ beforeAll(() => {
   const roleRepository = new InMemoryRoleRepository();
   emailService = new MockEmailService();
   const rateLimiterService = new MockRateLimiterService();
+  const tokenService = new MockTokenService();
 
   const authRouter = createAuthRouter(
     new RegisterUseCase(
@@ -42,8 +44,8 @@ beforeAll(() => {
       emailService,
       roleRepository,
     ),
-    new LoginUseCase(userRepository, tokenRepository, roleRepository),
-    new RefreshUseCase(userRepository, tokenRepository),
+    new LoginUseCase(userRepository, tokenRepository, roleRepository, tokenService),
+    new RefreshUseCase(userRepository, tokenRepository, tokenService),
     new LogoutUseCase(tokenRepository),
     new MeUseCase(userRepository),
     new VerifyEmailUseCase(userRepository, verificationTokenRepository),
