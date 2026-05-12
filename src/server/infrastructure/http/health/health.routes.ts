@@ -1,8 +1,7 @@
-import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
-import { z } from "@hono/zod-openapi";
-import { db } from "../../db";
-import { sql } from "drizzle-orm";
+import { createRoute, z } from "@hono/zod-openapi";
 import { createAppRouter } from "../shared/create-router";
+import { IHealthCheckService } from "../../../core/services/health-check.service";
+import { AppContext } from "../types/context";
 
 const healthSchema = z.object({
   status: z.enum(["ok", "degraded"]),
@@ -34,38 +33,37 @@ const healthRoute = createRoute({
   },
 });
 
-export const healthRouter = createAppRouter();
+export type HealthRouterDeps = {
+  healthCheckService: IHealthCheckService;
+};
 
-healthRouter.openapi(healthRoute, async (c) => {
-  const start = Date.now();
-  let dbStatus: "ok" | "error" = "ok";
-  let dbLatency: number | undefined;
-  let dbError: string | undefined;
+export function createHealthRouter(deps: HealthRouterDeps) {
+  const router = createAppRouter();
+  const { healthCheckService } = deps;
 
-  try {
-    await db.execute(sql`SELECT 1`);
-    dbLatency = Date.now() - start;
-  } catch (err) {
-    dbStatus = "error";
-    dbError = err instanceof Error ? err.message : "Unknown DB error";
-  }
+  router.openapi(healthRoute, async (c) => {
+    const result = await healthCheckService.check();
+    const httpStatus = result.status === "ok" ? 200 : 503;
 
-  const status = dbStatus === "ok" ? "ok" : "degraded";
-  const httpStatus = status === "ok" ? 200 : 503;
-
-  return c.json(
-    {
-      status,
-      uptime: process.uptime(),
-      timestamp: new Date().toISOString(),
-      services: {
-        database: {
-          status: dbStatus,
-          ...(dbLatency !== undefined && { latencyMs: dbLatency }),
-          ...(dbError !== undefined && { error: dbError }),
+    return c.json(
+      {
+        status: result.status,
+        uptime: process.uptime(),
+        timestamp: new Date().toISOString(),
+        services: {
+          database: {
+            status: result.status === "ok" ? "ok" : "error",
+            latencyMs: result.latencyMs,
+          },
         },
       },
-    },
-    httpStatus,
-  );
+      httpStatus,
+    );
+  });
+
+  return router;
+}
+
+export const healthRouter = createHealthRouter({
+  healthCheckService: {} as IHealthCheckService,
 });

@@ -41,7 +41,11 @@ export class InMemoryRoleRepository implements IRoleRepository {
   async findPermissionsByRoleIds(
     roleIds: string[],
   ): Promise<PermissionEntity[]> {
-    return [];
+    const matchedRoles = this.roles.filter((r) => roleIds.includes(r.id));
+    if (matchedRoles.some((r) => r.name === "admin")) {
+      return [new PermissionEntity(crypto.randomUUID(), "manage_users", "Can manage users", new Date())];
+    }
+    return [new PermissionEntity(crypto.randomUUID(), "read_content", "Can read content", new Date())];
   }
 
   async assignRoleToUser(userId: string, roleId: string): Promise<void> {

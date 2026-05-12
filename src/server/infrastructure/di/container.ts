@@ -26,6 +26,7 @@ import { InMemoryRateLimiterService } from "../services/in-memory-rate-limiter.s
 import { redis } from "../redis";
 import { RedisTokenBlacklistService } from "../services/redis-token-blacklist.service";
 import { TockTokenService } from "../services/token.service";
+import { DrizzleHealthCheckService } from "../services/drizzle-health-check.service";
 import { Cradle } from "./types";
 
 export const container = createContainer<Cradle>({
@@ -76,4 +77,5 @@ container.register({
   // Services
   rateLimiterService: asClass(InMemoryRateLimiterService).singleton(),
   tokenService: asClass(TockTokenService).singleton(),
+  healthCheckService: asClass(DrizzleHealthCheckService).singleton(),
 });

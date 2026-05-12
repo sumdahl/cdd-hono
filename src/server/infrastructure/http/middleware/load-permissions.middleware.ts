@@ -18,13 +18,13 @@ export function createLoadPermissions({
       await next();
       return;
     }
-
-    const allRoles = await roleRepository.findAll();
+    const { roles: allRoles } = await roleRepository.findAll();
     const userRoleIds = allRoles
       .filter((r) => roles.includes(r.name))
       .map((r) => r.id);
 
-    const permissions = await roleRepository.findPermissionsByRoleIds(userRoleIds);
+    const permissions =
+      await roleRepository.findPermissionsByRoleIds(userRoleIds);
     const permissionNames = [...new Set(permissions.map((p) => p.name))];
 
     c.set("permissions", permissionNames);
