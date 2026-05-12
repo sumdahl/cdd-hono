@@ -25,6 +25,8 @@ import { RemoveRoleUseCase } from "../../core/use-cases/admin/remove-role";
 import { InMemoryRateLimiterService } from "../services/in-memory-rate-limiter.service";
 import { redis } from "../redis";
 import { RedisTokenBlacklistService } from "../services/redis-token-blacklist.service";
+import { TockTokenService } from "../services/token.service";
+import { DrizzleHealthCheckService } from "../services/drizzle-health-check.service";
 import { Cradle } from "./types";
 
 export const container = createContainer<Cradle>({
@@ -74,4 +76,6 @@ container.register({
 
   // Services
   rateLimiterService: asClass(InMemoryRateLimiterService).singleton(),
+  tokenService: asClass(TockTokenService).singleton(),
+  healthCheckService: asClass(DrizzleHealthCheckService).singleton(),
 });

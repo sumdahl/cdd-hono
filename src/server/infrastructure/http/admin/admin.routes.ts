@@ -1,6 +1,7 @@
 import { createRoute, z } from "@hono/zod-openapi";
+import { MiddlewareHandler } from "hono";
 import { createAppRouter } from "../shared/create-router";
-import { authMiddleware, requireRole } from "../middleware/auth.middleware";
+import { requireRole } from "../middleware/auth.middleware";
 import {
   successResponseSchema,
   errorResponseSchema,
@@ -21,16 +22,28 @@ import { DeleteUserUseCase } from "../../../core/use-cases/admin/delete-user";
 import { GetAllRolesUseCase } from "../../../core/use-cases/admin/get-all-roles";
 import { AssignRoleUseCase } from "../../../core/use-cases/admin/assign-role";
 import { RemoveRoleUseCase } from "../../../core/use-cases/admin/remove-role";
+import { AppContext } from "../types/context";
+
+export type AdminRouterDeps = {
+  getAllUsers: GetAllUsersUseCase;
+  getUserById: GetUserByIdUseCase;
+  deleteUser: DeleteUserUseCase;
+  getAllRoles: GetAllRolesUseCase;
+  assignRole: AssignRoleUseCase;
+  removeRole: RemoveRoleUseCase;
+};
+
+export type AdminRouterMiddleware = {
+  authMiddleware: MiddlewareHandler<AppContext>;
+};
 
 export function createAdminRouter(
-  getAllUsers: GetAllUsersUseCase,
-  getUserById: GetUserByIdUseCase,
-  deleteUser: DeleteUserUseCase,
-  getAllRoles: GetAllRolesUseCase,
-  assignRole: AssignRoleUseCase,
-  removeRole: RemoveRoleUseCase,
+  deps: AdminRouterDeps,
+  middleware: AdminRouterMiddleware,
 ) {
   const router = createAppRouter();
+  const { getAllUsers, getUserById, deleteUser, getAllRoles, assignRole, removeRole } = deps;
+  const { authMiddleware } = middleware;
 
   const getAllUsersRoute = createRoute({
     method: "get",

@@ -1,4 +1,5 @@
 import { createRoute, z } from "@hono/zod-openapi";
+import { MiddlewareHandler } from "hono";
 import { RegisterUseCase } from "../../../core/use-cases/auth/register";
 import { LoginUseCase } from "../../../core/use-cases/auth/login";
 import { RefreshUseCase } from "../../../core/use-cases/auth/refresh";
@@ -21,26 +22,38 @@ import {
   accessTokenResponseSchema,
   userResponseSchema,
 } from "./auth.schemas";
-import { authMiddleware, requireRole } from "../middleware/auth.middleware";
+import { requireRole } from "../middleware/auth.middleware";
 import {
   successResponseSchema,
   errorResponseSchema,
 } from "../response/response.schemas";
 import { successHandler } from "../response/response.handler";
 import { createAppRouter } from "../shared/create-router";
+import { AppContext } from "../types/context";
+
+export type AuthRouterDeps = {
+  register: RegisterUseCase;
+  login: LoginUseCase;
+  refresh: RefreshUseCase;
+  logout: LogoutUseCase;
+  me: MeUseCase;
+  verifyEmail: VerifyEmailUseCase;
+  resendVerification: ResendVerificationUseCase;
+  forgotPassword: ForgotPasswordUseCase;
+  resetPassword: ResetPasswordUseCase;
+};
+
+export type AuthRouterMiddleware = {
+  authMiddleware: MiddlewareHandler<AppContext>;
+};
 
 export function createAuthRouter(
-  register: RegisterUseCase,
-  login: LoginUseCase,
-  refresh: RefreshUseCase,
-  logout: LogoutUseCase,
-  me: MeUseCase,
-  verifyEmail: VerifyEmailUseCase,
-  resendVerification: ResendVerificationUseCase,
-  forgotPassword: ForgotPasswordUseCase,
-  resetPassword: ResetPasswordUseCase,
+  deps: AuthRouterDeps,
+  middleware: AuthRouterMiddleware,
 ) {
   const router = createAppRouter();
+  const { register, login, refresh, logout, me, verifyEmail, resendVerification, forgotPassword, resetPassword } = deps;
+  const { authMiddleware } = middleware;
 
   const registerRoute = createRoute({
     method: "post",

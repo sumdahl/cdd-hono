@@ -1,47 +1,25 @@
-// @.rules
 import type { MiddlewareHandler, Context } from "hono";
+import { createMiddleware } from "hono/factory";
 import { ErrorCode } from "../../../core/errors";
+import { IRateLimiterService } from "../../../core/services/rate-limiter.service";
 import { formatError } from "../response/response.formatter";
 
 export type RateLimiterOptions = {
+  rateLimiterService: IRateLimiterService;
   limit: number;
   windowMs: number;
   keyPrefix?: string;
   keyGenerator?: (c: Context) => string;
 };
 
-type ClientRecord = {
-  count: number;
-  resetAt: number;
-};
-
 export function rateLimiter({
+  rateLimiterService,
   limit,
   windowMs,
   keyPrefix,
   keyGenerator,
 }: RateLimiterOptions): MiddlewareHandler {
-  const store = new Map<string, ClientRecord>();
-
-  const cleanupInterval = setInterval(
-    () => {
-      const now = Date.now();
-      for (const [key, record] of store.entries()) {
-        if (record.resetAt < now) {
-          store.delete(key);
-        }
-      }
-    },
-    Math.max(windowMs, 60_000),
-  );
-
-  if (typeof cleanupInterval.unref === "function") {
-    cleanupInterval.unref();
-  }
-
-  return async (c, next) => {
-    const now = Date.now();
-
+  return createMiddleware(async (c, next) => {
     let key: string;
     if (keyGenerator) {
       key = keyGenerator(c);
@@ -55,25 +33,12 @@ export function rateLimiter({
       key = `${ip}:${identifier}`;
     }
 
-    let record = store.get(key);
+    const allowed = await rateLimiterService.isAllowed(key, limit, windowMs);
 
-    if (!record || record.resetAt < now) {
-      record = { count: 1, resetAt: now + windowMs };
-      store.set(key, record);
+    c.header("X-RateLimit-Limit", String(limit));
 
-      c.header("X-RateLimit-Limit", String(limit));
-      c.header("X-RateLimit-Remaining", String(limit - 1));
-
-      await next();
-      return;
-    }
-
-    if (record.count >= limit) {
-      const retryAfter = Math.ceil((record.resetAt - now) / 1000);
-      c.header("Retry-After", String(retryAfter));
-      c.header("X-RateLimit-Limit", String(limit));
+    if (!allowed) {
       c.header("X-RateLimit-Remaining", "0");
-
       return c.json(
         formatError(
           ErrorCode.TOO_MANY_REQUESTS,
@@ -83,10 +48,6 @@ export function rateLimiter({
       );
     }
 
-    record.count++;
-    c.header("X-RateLimit-Limit", String(limit));
-    c.header("X-RateLimit-Remaining", String(limit - record.count));
-
     await next();
-  };
+  });
 }

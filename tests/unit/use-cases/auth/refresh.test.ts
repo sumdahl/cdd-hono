@@ -4,7 +4,7 @@ import { IUserRepository } from "../../../../src/server/core/repositories/user.r
 import { ITokenRepository } from "../../../../src/server/core/repositories/token.repository";
 import { UserEntity } from "../../../../src/server/core/entities/user.entity";
 import { AppError } from "../../../../src/server/core/errors";
-import jwt from "jsonwebtoken";
+import { MockTokenService } from "../../../mocks/token.service.mock";
 
 const mockUser = new UserEntity(
   "1",
@@ -14,12 +14,8 @@ const mockUser = new UserEntity(
   new Date(),
 );
 
-const validToken = jwt.sign(
-  { sub: "1" },
-  process.env.JWT_REFRESH_SECRET ?? "test-secret",
-  { expiresIn: "7d" },
-);
 const futureDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+const pastDate = new Date(Date.now() - 1000);
 
 const mockUserRepository: IUserRepository = {
   findById: mock(async () => mockUser),
@@ -34,10 +30,17 @@ const mockTokenRepository: ITokenRepository = {
   deleteAllForUser: mock(async () => {}),
 };
 
+const tokenService = new MockTokenService();
+
 describe("RefreshUseCase", () => {
   it("should return new access token for valid refresh token", async () => {
-    const useCase = new RefreshUseCase(mockUserRepository, mockTokenRepository);
-    const result = await useCase.execute(validToken);
+    const mockRefreshToken = await tokenService.generateRefreshToken({
+      userId: "1",
+      email: "sumiran@example.com",
+    });
+    const tokenRepo = { ...mockTokenRepository, find: mock(async () => ({ userId: "1", expiresAt: futureDate })) };
+    const useCase = new RefreshUseCase(mockUserRepository, tokenRepo, tokenService);
+    const result = await useCase.execute(mockRefreshToken);
 
     expect(result).toHaveProperty("accessToken");
     expect(result).toHaveProperty("refreshToken");
@@ -45,21 +48,18 @@ describe("RefreshUseCase", () => {
 
   it("should throw INVALID_TOKEN if token not in DB", async () => {
     const tokenRepo = { ...mockTokenRepository, find: mock(async () => null) };
-    const useCase = new RefreshUseCase(mockUserRepository, tokenRepo);
+    const useCase = new RefreshUseCase(mockUserRepository, tokenRepo, tokenService);
 
-    expect(useCase.execute(validToken)).rejects.toThrow(AppError);
+    expect(useCase.execute("invalid-token")).rejects.toThrow(AppError);
   });
 
   it("should throw TOKEN_EXPIRED if token is expired in DB", async () => {
     const tokenRepo = {
       ...mockTokenRepository,
-      find: mock(async () => ({
-        userId: "1",
-        expiresAt: new Date(Date.now() - 1000),
-      })),
+      find: mock(async () => ({ userId: "1", expiresAt: pastDate })),
     };
-    const useCase = new RefreshUseCase(mockUserRepository, tokenRepo);
+    const useCase = new RefreshUseCase(mockUserRepository, tokenRepo, tokenService);
 
-    expect(useCase.execute(validToken)).rejects.toThrow(AppError);
+    expect(useCase.execute("expired-token")).rejects.toThrow(AppError);
   });
 });

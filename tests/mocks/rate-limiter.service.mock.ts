@@ -1,20 +1,23 @@
 import { IRateLimiterService } from "../../src/server/core/services/rate-limiter.service";
 
 export class MockRateLimiterService implements IRateLimiterService {
-  private blocked = false;
+  private allowed = true;
 
   async isAllowed(): Promise<boolean> {
-    return !this.blocked;
+    return this.allowed;
   }
 
   async reset(): Promise<void> {}
 
-  // test helper — simulate rate limit hit
+  setResponse(allowed: boolean) {
+    this.allowed = allowed;
+  }
+
   block() {
-    this.blocked = true;
+    this.allowed = false;
   }
 
   unblock() {
-    this.blocked = false;
+    this.allowed = true;
   }
 }

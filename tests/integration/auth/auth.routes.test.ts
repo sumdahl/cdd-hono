@@ -12,6 +12,7 @@ import { ResetPasswordUseCase } from "../../../src/server/core/use-cases/auth/re
 import { VerifyEmailUseCase } from "../../../src/server/core/use-cases/auth/verify-email";
 import { createAuthRouter } from "../../../src/server/infrastructure/http/auth/auth.routes";
 import { errorHandler } from "../../../src/server/infrastructure/http/middleware/error-handler";
+import { createAuthMiddleware } from "../../../src/server/infrastructure/http/middleware/auth.middleware";
 import { InMemoryPasswordResetTokenRepository } from "../../mocks/password-reset-token.in-memory.repository";
 import { InMemoryRoleRepository } from "../../mocks/role.in-memory.repository";
 import { InMemoryTokenRepository } from "../../mocks/token.in-memory.repository";
@@ -19,51 +20,64 @@ import { InMemoryUserRepository } from "../../mocks/user.in-memory.repository";
 import { InMemoryVerificationTokenRepository } from "../../mocks/verification-token.in-memory.repository";
 import { MockEmailService } from "../../mocks/email.service.mock";
 import { MockRateLimiterService } from "../../mocks/rate-limiter.service.mock";
+import { MockTokenService } from "../../mocks/token.service.mock";
 
 let app: OpenAPIHono;
 let userRepository: InMemoryUserRepository;
-let verificationTokenRepository: InMemoryVerificationTokenRepository;
 let emailService: MockEmailService;
 
 beforeAll(() => {
   userRepository = new InMemoryUserRepository();
   const tokenRepository = new InMemoryTokenRepository();
-  verificationTokenRepository = new InMemoryVerificationTokenRepository();
+  const verificationTokenRepository = new InMemoryVerificationTokenRepository();
   const passwordResetTokenRepository =
     new InMemoryPasswordResetTokenRepository();
   const roleRepository = new InMemoryRoleRepository();
   emailService = new MockEmailService();
   const rateLimiterService = new MockRateLimiterService();
+  const tokenService = new MockTokenService();
+
+  const authMiddleware = createAuthMiddleware({
+    tokenService,
+    userRepository,
+    tokenBlacklistService: {
+      blacklist: async () => {},
+      isBlacklisted: async () => false,
+    },
+  });
 
   const authRouter = createAuthRouter(
-    new RegisterUseCase(
-      userRepository,
-      verificationTokenRepository,
-      emailService,
-      roleRepository,
-    ),
-    new LoginUseCase(userRepository, tokenRepository, roleRepository),
-    new RefreshUseCase(userRepository, tokenRepository),
-    new LogoutUseCase(tokenRepository),
-    new MeUseCase(userRepository),
-    new VerifyEmailUseCase(userRepository, verificationTokenRepository),
-    new ResendVerificationUseCase(
-      userRepository,
-      verificationTokenRepository,
-      emailService,
-      rateLimiterService,
-    ),
-    new ForgotPasswordUseCase(
-      userRepository,
-      passwordResetTokenRepository,
-      emailService,
-      rateLimiterService,
-    ),
-    new ResetPasswordUseCase(
-      userRepository,
-      passwordResetTokenRepository,
-      tokenRepository,
-    ),
+    {
+      register: new RegisterUseCase(
+        userRepository,
+        verificationTokenRepository,
+        emailService,
+        roleRepository,
+      ),
+      login: new LoginUseCase(userRepository, tokenRepository, roleRepository, tokenService),
+      refresh: new RefreshUseCase(userRepository, tokenRepository, tokenService),
+      logout: new LogoutUseCase(tokenRepository),
+      me: new MeUseCase(userRepository),
+      verifyEmail: new VerifyEmailUseCase(userRepository, verificationTokenRepository),
+      resendVerification: new ResendVerificationUseCase(
+        userRepository,
+        verificationTokenRepository,
+        emailService,
+        rateLimiterService,
+      ),
+      forgotPassword: new ForgotPasswordUseCase(
+        userRepository,
+        passwordResetTokenRepository,
+        emailService,
+        rateLimiterService,
+      ),
+      resetPassword: new ResetPasswordUseCase(
+        userRepository,
+        passwordResetTokenRepository,
+        tokenRepository,
+      ),
+    },
+    { authMiddleware },
   );
 
   app = new OpenAPIHono();
