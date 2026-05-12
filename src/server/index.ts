@@ -1,30 +1,41 @@
-// @.rules
 import { OpenAPIHono } from "@hono/zod-openapi";
+import { container } from "./infrastructure/di/container";
+import { createAuthMiddleware } from "./infrastructure/http/middleware/auth.middleware";
 import { authRouter } from "./infrastructure/http/auth";
 import { healthRouter } from "./infrastructure/http/health/health.routes";
 import { corsMiddleware } from "./infrastructure/http/middleware/cors";
 import { errorHandler } from "./infrastructure/http/middleware/error-handler";
-import { loadPermissions } from "./infrastructure/http/middleware/load-permissions.middleware";
+import { createLoadPermissions } from "./infrastructure/http/middleware/load-permissions.middleware";
 import { requestLogger } from "./infrastructure/http/middleware/logger";
 import { rateLimiter } from "./infrastructure/http/middleware/rate-limiter";
 import { adminRouter } from "./infrastructure/http/admin";
 import { ErrorCode } from "./core/errors";
+
+const { rateLimiterService, roleRepository, tokenService, userRepository, tokenBlacklistService } = container.cradle;
 
 export const app = new OpenAPIHono().basePath("/api/v1");
 
 app.use("*", corsMiddleware);
 app.use(
   "*",
-  rateLimiter({ limit: 100, windowMs: 60_000, keyPrefix: "global" }),
+  rateLimiter({
+    rateLimiterService,
+    limit: 100,
+    windowMs: 60_000,
+    keyPrefix: "global",
+  }),
 );
 app.use(
   "/auth/*",
-  rateLimiter({ limit: 10, windowMs: 60_000, keyPrefix: "auth-routes" }),
+  rateLimiter({
+    rateLimiterService,
+    limit: 10,
+    windowMs: 60_000,
+    keyPrefix: "auth-routes",
+  }),
 );
 app.use("*", requestLogger);
-// loadPermissions runs after authMiddleware sets roles on the context.
-// On public routes roles is undefined so it short-circuits and sets permissions to [].
-app.use("*", loadPermissions);
+app.use("*", createLoadPermissions({ roleRepository }));
 
 app.notFound((c) =>
   c.json(

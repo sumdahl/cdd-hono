@@ -1,36 +1,19 @@
 // @.rules
 import { beforeAll, describe, expect, it } from "bun:test";
-import { asValue } from "awilix";
 import { OpenAPIHono } from "@hono/zod-openapi";
-import jwt from "jsonwebtoken";
 import { AssignRoleUseCase } from "../../../src/server/core/use-cases/admin/assign-role";
 import { DeleteUserUseCase } from "../../../src/server/core/use-cases/admin/delete-user";
 import { GetAllRolesUseCase } from "../../../src/server/core/use-cases/admin/get-all-roles";
 import { GetAllUsersUseCase } from "../../../src/server/core/use-cases/admin/get-all-users";
 import { GetUserByIdUseCase } from "../../../src/server/core/use-cases/admin/get-user-by-id";
 import { RemoveRoleUseCase } from "../../../src/server/core/use-cases/admin/remove-role";
-import { env } from "../../../src/server/config/env";
-import { container } from "../../../src/server/infrastructure/di/container";
 import { createAdminRouter } from "../../../src/server/infrastructure/http/admin/admin.routes";
+import { createAuthMiddleware } from "../../../src/server/infrastructure/http/middleware/auth.middleware";
 import { errorHandler } from "../../../src/server/infrastructure/http/middleware/error-handler";
+import { MockTokenService } from "../../mocks/token.service.mock";
 import { InMemoryRoleRepository } from "../../mocks/role.in-memory.repository";
 import { InMemoryUserRepository } from "../../mocks/user.in-memory.repository";
-
-// ─── helpers ────────────────────────────────────────────────────────────────
-
-function makeToken(
-  userId: string,
-  email: string,
-  roles: string[],
-): string {
-  return jwt.sign(
-    { sub: userId, email, roles, jti: crypto.randomUUID() },
-    env.JWT_ACCESS_SECRET,
-    { expiresIn: "1h" },
-  );
-}
-
-// ─── test state ─────────────────────────────────────────────────────────────
+import { MockTokenService } from "../../mocks/token.service.mock";
 
 let app: OpenAPIHono;
 let userRepository: InMemoryUserRepository;
@@ -44,18 +27,6 @@ beforeAll(async () => {
   userRepository = new InMemoryUserRepository();
   roleRepository = new InMemoryRoleRepository();
 
-  // Override container so authMiddleware uses in-memory repos
-  container.register({
-    userRepository: asValue(userRepository),
-    tokenBlacklistService: asValue({
-      blacklist: async () => {},
-      isBlacklisted: async () => false,
-    }),
-    // loadPermissions middleware needs roleRepository
-    roleRepository: asValue(roleRepository),
-  });
-
-  // Seed users
   const adminUser = await userRepository.create({
     email: "admin@test.com",
     name: "Admin",
@@ -70,30 +41,46 @@ beforeAll(async () => {
   adminUserId = adminUser.id;
   regularUserId = regularUser.id;
 
-  // Assign admin role to admin user
   const adminRole = await roleRepository.findByName("admin");
   await roleRepository.assignRoleToUser(adminUserId, adminRole!.id);
 
-  // Generate tokens
-  adminToken = makeToken(adminUserId, adminUser.email, ["admin"]);
-  userToken = makeToken(regularUserId, regularUser.email, ["user"]);
+  const tokenService = new MockTokenService();
+  adminToken = await tokenService.generateAccessToken({
+    userId: adminUserId,
+    email: adminUser.email,
+    roles: ["admin"],
+  });
+  userToken = await tokenService.generateAccessToken({
+    userId: regularUserId,
+    email: regularUser.email,
+    roles: ["user"],
+  });
 
-  // Wire the router with in-memory use case instances
+  const authMiddleware = createAuthMiddleware({
+    tokenService,
+    userRepository,
+    tokenBlacklistService: {
+      blacklist: async () => {},
+      isBlacklisted: async () => false,
+    },
+  });
+
   const adminRouter = createAdminRouter(
-    new GetAllUsersUseCase(userRepository, roleRepository),
-    new GetUserByIdUseCase(userRepository, roleRepository),
-    new DeleteUserUseCase(userRepository),
-    new GetAllRolesUseCase(roleRepository),
-    new AssignRoleUseCase(userRepository, roleRepository),
-    new RemoveRoleUseCase(userRepository, roleRepository),
+    {
+      getAllUsers: new GetAllUsersUseCase(userRepository, roleRepository),
+      getUserById: new GetUserByIdUseCase(userRepository, roleRepository),
+      deleteUser: new DeleteUserUseCase(userRepository),
+      getAllRoles: new GetAllRolesUseCase(roleRepository),
+      assignRole: new AssignRoleUseCase(userRepository, roleRepository),
+      removeRole: new RemoveRoleUseCase(userRepository, roleRepository),
+    },
+    { authMiddleware },
   );
 
   app = new OpenAPIHono();
   app.onError(errorHandler);
   app.route("/api/v1/admin", adminRouter);
 });
-
-// ─── GET /admin/users ────────────────────────────────────────────────────────
 
 describe("GET /api/v1/admin/users", () => {
   it("returns 401 when no auth token provided", async () => {
@@ -131,8 +118,6 @@ describe("GET /api/v1/admin/users", () => {
   });
 });
 
-// ─── GET /admin/users/:userId ────────────────────────────────────────────────
-
 describe("GET /api/v1/admin/users/:userId", () => {
   it("returns 401 when no auth token provided", async () => {
     const res = await app.request(`/api/v1/admin/users/${adminUserId}`);
@@ -158,17 +143,14 @@ describe("GET /api/v1/admin/users/:userId", () => {
   });
 
   it("returns 404 when user does not exist", async () => {
-    const res = await app.request(
-      `/api/v1/admin/users/non-existent-id`,
-      { headers: { Authorization: `Bearer ${adminToken}` } },
-    );
+    const res = await app.request("/api/v1/admin/users/non-existent-id", {
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
     const body = await res.json();
     expect(res.status).toBe(404);
     expect(body.error.code).toBe("USER_NOT_FOUND");
   });
 });
-
-// ─── DELETE /admin/users/:userId ─────────────────────────────────────────────
 
 describe("DELETE /api/v1/admin/users/:userId", () => {
   it("returns 401 when no auth token provided", async () => {
@@ -197,7 +179,6 @@ describe("DELETE /api/v1/admin/users/:userId", () => {
   });
 
   it("returns 200 and deletes user successfully", async () => {
-    // Create a throwaway user to delete
     const throwaway = await userRepository.create({
       email: "throwaway@test.com",
       name: "Throwaway",
@@ -211,8 +192,6 @@ describe("DELETE /api/v1/admin/users/:userId", () => {
     expect(res.status).toBe(200);
   });
 });
-
-// ─── GET /admin/roles ────────────────────────────────────────────────────────
 
 describe("GET /api/v1/admin/roles", () => {
   it("returns 401 when no auth token provided", async () => {
@@ -238,8 +217,6 @@ describe("GET /api/v1/admin/roles", () => {
     expect(body.data.data.length).toBeGreaterThan(0);
   });
 });
-
-// ─── POST /admin/users/:userId/roles ─────────────────────────────────────────
 
 describe("POST /api/v1/admin/users/:userId/roles", () => {
   it("returns 401 when no auth token provided", async () => {
@@ -302,8 +279,6 @@ describe("POST /api/v1/admin/users/:userId/roles", () => {
   });
 });
 
-// ─── DELETE /admin/users/:userId/roles/:roleName ──────────────────────────────
-
 describe("DELETE /api/v1/admin/users/:userId/roles/:roleName", () => {
   it("returns 401 when no auth token provided", async () => {
     const res = await app.request(
@@ -325,7 +300,6 @@ describe("DELETE /api/v1/admin/users/:userId/roles/:roleName", () => {
   });
 
   it("returns 200 when role is removed successfully", async () => {
-    // moderator was assigned in the assign-role test above
     const res = await app.request(
       `/api/v1/admin/users/${regularUserId}/roles/moderator`,
       {
@@ -337,7 +311,6 @@ describe("DELETE /api/v1/admin/users/:userId/roles/:roleName", () => {
   });
 
   it("returns 409 when removing the last admin role", async () => {
-    // adminUser is the only admin — removing their admin role should fail
     const res = await app.request(
       `/api/v1/admin/users/${adminUserId}/roles/admin`,
       {

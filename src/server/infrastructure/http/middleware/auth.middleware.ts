@@ -1,22 +1,23 @@
-// @.rules
 import { Context, MiddlewareHandler } from "hono";
 import { createMiddleware } from "hono/factory";
-import jwt from "jsonwebtoken";
-import { env } from "../../../config/env";
 import { AppError, ErrorCode } from "../../../core/errors";
 import { AppContext } from "../types/context";
-import { container } from "../../di/container";
+import { ITokenService } from "../../../core/services/token.service";
+import { ITokenBlacklistService } from "../../../core/services/token-blacklist.service";
+import { IUserRepository } from "../../../core/repositories/user.repository";
 
-type JwtPayload = {
-  sub: string;
-  email: string;
-  roles: string[];
-  jti: string;
-  exp: number;
+export type AuthMiddlewareDeps = {
+  tokenService: ITokenService;
+  userRepository: IUserRepository;
+  tokenBlacklistService: ITokenBlacklistService;
 };
 
-export const authMiddleware: MiddlewareHandler<AppContext> = createMiddleware(
-  async (c, next) => {
+export function createAuthMiddleware({
+  tokenService,
+  userRepository,
+  tokenBlacklistService,
+}: AuthMiddlewareDeps): MiddlewareHandler<AppContext> {
+  return createMiddleware(async (c, next) => {
     const authHeader = c.req.header("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       throw new AppError(
@@ -27,11 +28,14 @@ export const authMiddleware: MiddlewareHandler<AppContext> = createMiddleware(
     }
 
     const token = authHeader.split(" ")[1];
-    let payload: JwtPayload;
+    let payload;
 
     try {
-      payload = jwt.verify(token, env.JWT_ACCESS_SECRET) as JwtPayload;
-    } catch {
+      payload = await tokenService.verifyAccessToken(token);
+    } catch (err) {
+      if (err instanceof AppError) {
+        throw new AppError(ErrorCode.UNAUTHORIZED, err.message, 401);
+      }
       throw new AppError(
         ErrorCode.UNAUTHORIZED,
         "Invalid or expired access token",
@@ -40,7 +44,6 @@ export const authMiddleware: MiddlewareHandler<AppContext> = createMiddleware(
     }
 
     if (payload.jti) {
-      const { tokenBlacklistService } = container.cradle;
       const blacklisted = await tokenBlacklistService.isBlacklisted(
         payload.jti,
       );
@@ -53,22 +56,20 @@ export const authMiddleware: MiddlewareHandler<AppContext> = createMiddleware(
       }
     }
 
-    // verify user still exists in DB
-    const { userRepository } = container.cradle;
-    const user = await userRepository.findById(payload.sub);
+    const user = await userRepository.findById(payload.userId);
     if (!user) {
       throw new AppError(ErrorCode.UNAUTHORIZED, "User no longer exists", 401);
     }
 
-    c.set("userId", payload.sub);
+    c.set("userId", payload.userId);
     c.set("email", payload.email);
     c.set("roles", payload.roles ?? []);
     c.set("jti", payload.jti);
     c.set("exp", payload.exp);
 
     await next();
-  },
-);
+  });
+}
 
 export const requireRole = (
   ...requiredRoles: string[]
@@ -91,7 +92,11 @@ export const requirePermission = (
       userPermissions.includes(p),
     );
     if (!hasPermission) {
-      throw new AppError(ErrorCode.FORBIDDEN, "Insufficient permissions", 403);
+      throw new AppError(
+        ErrorCode.FORBIDDEN,
+        "Insufficient permissions",
+        403,
+      );
     }
     await next();
   });
