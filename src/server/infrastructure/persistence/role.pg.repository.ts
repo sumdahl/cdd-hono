@@ -1,5 +1,6 @@
-import { eq, inArray, sql, and } from "drizzle-orm";
+import { eq, inArray, and } from "drizzle-orm";
 import { DB } from "../db";
+import { countAll } from "../db/pagination";
 import { withDbError } from "../db/with-db-error";
 import {
   roles,
@@ -37,7 +38,7 @@ export class PostgresRoleRepository implements IRoleRepository {
       const { limit = 20, offset = 0 } = options;
       const [rows, countResult] = await Promise.all([
         this.db.select().from(roles).limit(limit).offset(offset).orderBy(roles.name),
-        this.db.select({ count: sql<number>`count(*)::int` }).from(roles),
+        this.db.select({ count: countAll }).from(roles),
       ]);
       return {
         roles: rows.map((r) => new RoleEntity(r.id, r.name, r.description, r.createdAt)),
@@ -109,7 +110,7 @@ export class PostgresRoleRepository implements IRoleRepository {
   async countUsersWithRole(roleId: string): Promise<number> {
     return withDbError("count users with role", async () => {
       const result = await this.db
-        .select({ count: sql<number>`count(*)::int` })
+        .select({ count: countAll })
         .from(userRoles)
         .where(eq(userRoles.roleId, roleId));
       return result[0]?.count ?? 0;
