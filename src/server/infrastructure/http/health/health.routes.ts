@@ -1,7 +1,6 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import { createAppRouter } from "../shared/create-router";
 import { IHealthCheckService } from "../../../core/services/health-check.service";
-import { AppContext } from "../types/context";
 
 const healthSchema = z.object({
   status: z.enum(["ok", "degraded"]),

@@ -2,13 +2,14 @@ import { describe, it, expect, mock } from "bun:test";
 import { MeUseCase } from "../../../../src/server/core/use-cases/auth/me";
 import { IUserRepository } from "../../../../src/server/core/repositories/user.repository";
 import { UserEntity } from "../../../../src/server/core/entities/user.entity";
-import { AppError, ErrorCode } from "../../../../src/server/core/errors";
+import { AppError } from "../../../../src/server/core/errors";
 
 const mockUser = new UserEntity(
   "1",
   "sumiran@example.com",
   "Sumiran",
   "hash",
+  false,
   new Date(),
 );
 

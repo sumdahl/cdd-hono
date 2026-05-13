@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "bun:test";
 import { VerifyEmailUseCase } from "../../../../src/server/core/use-cases/auth/verify-email";
 import { InMemoryUserRepository } from "../../../mocks/user.in-memory.repository";
 import { InMemoryVerificationTokenRepository } from "../../../mocks/verification-token.in-memory.repository";
-import { AppError, ErrorCode } from "../../../../src/server/core/errors";
+import { AppError } from "../../../../src/server/core/errors";
 
 let userRepository: InMemoryUserRepository;
 let verificationTokenRepository: InMemoryVerificationTokenRepository;
