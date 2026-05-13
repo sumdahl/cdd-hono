@@ -1,5 +1,6 @@
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { DB } from "../db";
+import { countAll } from "../db/pagination";
 import { withDbError, isDbError } from "../db/with-db-error";
 import { users } from "./schema/user.schema";
 import { IUserRepository } from "../../core/repositories/user.repository";
@@ -69,7 +70,7 @@ export class PostgresUserRepository implements IUserRepository {
       const { limit = 20, offset = 0 } = options;
       const [rows, countResult] = await Promise.all([
         this.db.select().from(users).limit(limit).offset(offset).orderBy(users.createdAt),
-        this.db.select({ count: sql<number>`count(*)::int` }).from(users),
+        this.db.select({ count: countAll }).from(users),
       ]);
       return {
         users: rows.map(
