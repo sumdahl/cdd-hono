@@ -63,7 +63,3 @@ export function createHealthRouter(deps: HealthRouterDeps) {
 
   return router;
 }
-
-export const healthRouter = createHealthRouter({
-  healthCheckService: {} as IHealthCheckService,
-});
