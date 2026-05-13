@@ -23,7 +23,8 @@ import { DeleteUserUseCase } from "../../core/use-cases/admin/delete-user";
 import { GetAllRolesUseCase } from "../../core/use-cases/admin/get-all-roles";
 import { AssignRoleUseCase } from "../../core/use-cases/admin/assign-role";
 import { RemoveRoleUseCase } from "../../core/use-cases/admin/remove-role";
-import { InMemoryRateLimiterService } from "../services/in-memory-rate-limiter.service";
+import { RedisRateLimiterService } from "../services/redis-rate-limiter.service";
+import { SessionVerifier } from "../services/session-verifier.service";
 import { redis } from "../redis";
 import { RedisTokenBlacklistService } from "../services/redis-token-blacklist.service";
 import { TockTokenService } from "../services/token.service";
@@ -38,6 +39,7 @@ import { IRateLimiterService } from "../../core/services/rate-limiter.service";
 import { ITokenService } from "../../core/services/token.service";
 import { ITokenBlacklistService } from "../../core/services/token-blacklist.service";
 import { IHealthCheckService } from "../../core/services/health-check.service";
+import { ISessionVerifier } from "../../core/services/session-verifier.service";
 
 export interface Cradle {
   db: DB;
@@ -54,6 +56,7 @@ export interface Cradle {
   rateLimiterService: IRateLimiterService;
   tokenService: ITokenService;
   healthCheckService: IHealthCheckService;
+  sessionVerifier: ISessionVerifier;
 
   registerUseCase: RegisterUseCase;
   loginUseCase: LoginUseCase;
@@ -108,7 +111,8 @@ container.register({
   assignRoleUseCase: asClass(AssignRoleUseCase).singleton(),
   removeRoleUseCase: asClass(RemoveRoleUseCase).singleton(),
 
-  rateLimiterService: asClass(InMemoryRateLimiterService).singleton(),
+  rateLimiterService: asClass(RedisRateLimiterService).singleton(),
   tokenService: asClass(TockTokenService).singleton(),
   healthCheckService: asClass(DrizzleHealthCheckService).singleton(),
+  sessionVerifier: asClass(SessionVerifier).singleton(),
 });

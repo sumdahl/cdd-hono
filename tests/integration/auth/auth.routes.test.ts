@@ -21,6 +21,7 @@ import { InMemoryVerificationTokenRepository } from "../../mocks/verification-to
 import { MockEmailService } from "../../mocks/email.service.mock";
 import { MockRateLimiterService } from "../../mocks/rate-limiter.service.mock";
 import { MockTokenService } from "../../mocks/token.service.mock";
+import { SessionVerifier } from "../../../src/server/infrastructure/services/session-verifier.service";
 
 let app: OpenAPIHono;
 let userRepository: InMemoryUserRepository;
@@ -38,12 +39,11 @@ beforeAll(() => {
   const tokenService = new MockTokenService();
 
   const authMiddleware = createAuthMiddleware({
-    tokenService,
-    userRepository,
-    tokenBlacklistService: {
-      blacklist: async () => {},
-      isBlacklisted: async () => false,
-    },
+    sessionVerifier: new SessionVerifier(
+      tokenService,
+      userRepository,
+      { blacklist: async () => {}, isBlacklisted: async () => false },
+    ),
   });
 
   const authRouter = createAuthRouter(

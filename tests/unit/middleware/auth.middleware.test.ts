@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, mock } from "bun:test";
 import { createAuthMiddleware, requireRole } from "../../../src/server/infrastructure/http/middleware/auth.middleware";
+import { SessionVerifier } from "../../../src/server/infrastructure/services/session-verifier.service";
 import { MockTokenService } from "../../mocks/token.service.mock";
 import { InMemoryUserRepository } from "../../mocks/user.in-memory.repository";
 import { OpenAPIHono } from "@hono/zod-openapi";
@@ -32,12 +33,11 @@ beforeEach(async () => {
   await userRepository.markAsVerified(user.id);
 
   authMiddleware = createAuthMiddleware({
-    tokenService,
-    userRepository,
-    tokenBlacklistService: {
-      blacklist: mock(async () => {}),
-      isBlacklisted: mock(async () => false),
-    },
+    sessionVerifier: new SessionVerifier(
+      tokenService,
+      userRepository,
+      { blacklist: mock(async () => {}), isBlacklisted: mock(async () => false) },
+    ),
   });
 });
 
@@ -84,12 +84,11 @@ describe("createAuthMiddleware", () => {
     });
 
     const blacklistedMiddleware = createAuthMiddleware({
-      tokenService: freshTokenService,
-      userRepository: freshRepo,
-      tokenBlacklistService: {
-        blacklist: mock(async () => {}),
-        isBlacklisted: mock(async () => true),
-      },
+      sessionVerifier: new SessionVerifier(
+        freshTokenService,
+        freshRepo,
+        { blacklist: mock(async () => {}), isBlacklisted: mock(async () => true) },
+      ),
     });
 
     const app = new OpenAPIHono();
