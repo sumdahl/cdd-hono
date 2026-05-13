@@ -34,14 +34,14 @@ export class PostgresVerificationTokenRepository implements IVerificationTokenRe
   }
 
   async delete(token: string): Promise<void> {
-    return withDbError("delete verification token", () =>
-      this.db.delete(verificationTokens).where(eq(verificationTokens.token, token)),
-    );
+    return withDbError("delete verification token", async () => {
+      await this.db.delete(verificationTokens).where(eq(verificationTokens.token, token));
+    });
   }
 
   async deleteAllForUser(userId: string): Promise<void> {
-    return withDbError("delete all verification tokens for user", () =>
-      this.db.delete(verificationTokens).where(eq(verificationTokens.userId, userId)),
-    );
+    return withDbError("delete all verification tokens for user", async () => {
+      await this.db.delete(verificationTokens).where(eq(verificationTokens.userId, userId));
+    });
   }
 }

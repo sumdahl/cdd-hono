@@ -64,15 +64,15 @@ export class PostgresRoleRepository implements IRoleRepository {
   }
 
   async assignRoleToUser(userId: string, roleId: string): Promise<void> {
-    return withDbError("assign role to user", () =>
-      this.db.insert(userRoles).values({ userId, roleId }).onConflictDoNothing(),
-    );
+    return withDbError("assign role to user", async () => {
+      await this.db.insert(userRoles).values({ userId, roleId }).onConflictDoNothing();
+    });
   }
 
   async removeRoleFromUser(userId: string, roleId: string): Promise<void> {
-    return withDbError("remove role from user", () =>
-      this.db.delete(userRoles).where(and(eq(userRoles.userId, userId), eq(userRoles.roleId, roleId))),
-    );
+    return withDbError("remove role from user", async () => {
+      await this.db.delete(userRoles).where(and(eq(userRoles.userId, userId), eq(userRoles.roleId, roleId)));
+    });
   }
 
   async findRolesByUserId(userId: string): Promise<RoleEntity[]> {

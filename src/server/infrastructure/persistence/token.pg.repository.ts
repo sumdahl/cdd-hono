@@ -8,14 +8,14 @@ export class PostgresTokenRepository implements ITokenRepository {
   constructor(private readonly db: DB) {}
 
   async save(userId: string, token: string, expiresAt: Date): Promise<void> {
-    return withDbError("save refresh token", () =>
-      this.db.insert(refreshTokens).values({
+    return withDbError("save refresh token", async () => {
+      await this.db.insert(refreshTokens).values({
         id: crypto.randomUUID(),
         userId,
         token,
         expiresAt,
-      }),
-    );
+      });
+    });
   }
 
   async find(
@@ -32,14 +32,14 @@ export class PostgresTokenRepository implements ITokenRepository {
   }
 
   async delete(token: string): Promise<void> {
-    return withDbError("delete refresh token", () =>
-      this.db.delete(refreshTokens).where(eq(refreshTokens.token, token)),
-    );
+    return withDbError("delete refresh token", async () => {
+      await this.db.delete(refreshTokens).where(eq(refreshTokens.token, token));
+    });
   }
 
   async deleteAllForUser(userId: string): Promise<void> {
-    return withDbError("delete all refresh tokens for user", () =>
-      this.db.delete(refreshTokens).where(eq(refreshTokens.userId, userId)),
-    );
+    return withDbError("delete all refresh tokens for user", async () => {
+      await this.db.delete(refreshTokens).where(eq(refreshTokens.userId, userId));
+    });
   }
 }
