@@ -11,9 +11,9 @@ import { createAdminRouter } from "../../../src/server/infrastructure/http/admin
 import { createAuthMiddleware } from "../../../src/server/infrastructure/http/middleware/auth.middleware";
 import { errorHandler } from "../../../src/server/infrastructure/http/middleware/error-handler";
 import { MockTokenService } from "../../mocks/token.service.mock";
+import { SessionVerifier } from "../../../src/server/infrastructure/services/session-verifier.service";
 import { InMemoryRoleRepository } from "../../mocks/role.in-memory.repository";
 import { InMemoryUserRepository } from "../../mocks/user.in-memory.repository";
-import { MockTokenService } from "../../mocks/token.service.mock";
 
 let app: OpenAPIHono;
 let userRepository: InMemoryUserRepository;
@@ -57,12 +57,11 @@ beforeAll(async () => {
   });
 
   const authMiddleware = createAuthMiddleware({
-    tokenService,
-    userRepository,
-    tokenBlacklistService: {
-      blacklist: async () => {},
-      isBlacklisted: async () => false,
-    },
+    sessionVerifier: new SessionVerifier(
+      tokenService,
+      userRepository,
+      { blacklist: async () => {}, isBlacklisted: async () => false },
+    ),
   });
 
   const adminRouter = createAdminRouter(
