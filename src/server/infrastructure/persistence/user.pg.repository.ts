@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { DB } from "../db";
 import { countAll } from "../db/pagination";
-import { withDbError, isDbError } from "../db/with-db-error";
+import { withDbError } from "../db/with-db-error";
 import { users } from "./schema/user.schema";
 import { IUserRepository } from "../../core/repositories/user.repository";
 import { UserEntity } from "../../core/entities/user.entity";
@@ -16,15 +16,32 @@ export class PostgresUserRepository implements IUserRepository {
     return withDbError("find user by id", async () => {
       const [row] = await this.db.select().from(users).where(eq(users.id, id));
       if (!row) return null;
-      return new UserEntity(row.id, row.email, row.name, row.passwordHash, row.isVerified, row.createdAt);
+      return new UserEntity(
+        row.id,
+        row.email,
+        row.name,
+        row.passwordHash,
+        row.isVerified,
+        row.createdAt,
+      );
     });
   }
 
   async findByEmail(email: string): Promise<UserEntity | null> {
     return withDbError("find user by email", async () => {
-      const [row] = await this.db.select().from(users).where(eq(users.email, email));
+      const [row] = await this.db
+        .select()
+        .from(users)
+        .where(eq(users.email, email));
       if (!row) return null;
-      return new UserEntity(row.id, row.email, row.name, row.passwordHash, row.isVerified, row.createdAt);
+      return new UserEntity(
+        row.id,
+        row.email,
+        row.name,
+        row.passwordHash,
+        row.isVerified,
+        row.createdAt,
+      );
     });
   }
 
@@ -40,11 +57,22 @@ export class PostgresUserRepository implements IUserRepository {
           .insert(users)
           .values({ id: crypto.randomUUID(), ...data })
           .returning();
-        return new UserEntity(row.id, row.email, row.name, row.passwordHash, row.isVerified, row.createdAt);
+        return new UserEntity(
+          row.id,
+          row.email,
+          row.name,
+          row.passwordHash,
+          row.isVerified,
+          row.createdAt,
+        );
       },
       (err) => {
         if (err.code === PG_UNIQUE_VIOLATION) {
-          return new AppError(ErrorCode.EMAIL_TAKEN, "Email already in use", 409);
+          return new AppError(
+            ErrorCode.EMAIL_TAKEN,
+            "Email already in use",
+            409,
+          );
         }
         return null;
       },
@@ -53,7 +81,10 @@ export class PostgresUserRepository implements IUserRepository {
 
   async markAsVerified(userId: string): Promise<void> {
     return withDbError("verify user", () =>
-      this.db.update(users).set({ isVerified: true }).where(eq(users.id, userId)),
+      this.db
+        .update(users)
+        .set({ isVerified: true })
+        .where(eq(users.id, userId)),
     );
   }
 
@@ -69,12 +100,25 @@ export class PostgresUserRepository implements IUserRepository {
     return withDbError("find all users", async () => {
       const { limit = 20, offset = 0 } = options;
       const [rows, countResult] = await Promise.all([
-        this.db.select().from(users).limit(limit).offset(offset).orderBy(users.createdAt),
+        this.db
+          .select()
+          .from(users)
+          .limit(limit)
+          .offset(offset)
+          .orderBy(users.createdAt),
         this.db.select({ count: countAll }).from(users),
       ]);
       return {
         users: rows.map(
-          (r) => new UserEntity(r.id, r.email, r.name, r.passwordHash, r.isVerified, r.createdAt),
+          (r) =>
+            new UserEntity(
+              r.id,
+              r.email,
+              r.name,
+              r.passwordHash,
+              r.isVerified,
+              r.createdAt,
+            ),
         ),
         total: countResult[0].count,
       };

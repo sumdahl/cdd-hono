@@ -8,7 +8,7 @@ export class RemoveRoleUseCase {
     private readonly roleRepository: IRoleRepository,
   ) {}
 
-  async execute(userId: string, roleName: string, requestingUserId: string) {
+  async execute(userId: string, roleName: string) {
     const user = await this.userRepository.findById(userId);
     if (!user) {
       throw new AppError(ErrorCode.USER_NOT_FOUND, "User not found", 404);

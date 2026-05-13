@@ -1,6 +1,5 @@
 import { IUserRepository } from "../../repositories/user.repository";
-import { AppError } from "../../../core/errors";
-import { ErrorCode } from "../../../core/errors";
+import { AppError, ErrorCode } from "../../errors";
 
 export class MeUseCase {
   constructor(private readonly userRepository: IUserRepository) {}

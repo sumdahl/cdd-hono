@@ -15,7 +15,9 @@
     "db:migrate": "bun run scripts/migrate.ts",
     "db:seed": "bun run scripts/seed.ts",
     "db:studio": "drizzle-kit studio",
-    "export:spec": "bun run scripts/export-spec.ts"
+    "export:spec": "bun run scripts/export-spec.ts",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix"
   },
   "keywords": [],
   "author": "",
@@ -45,7 +47,8 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.6.0",
     "dotenv": "^17.4.2",
-    "drizzle-kit": "^0.31.10"
+    "drizzle-kit": "^0.31.10",
+    "oxlint": "^1.64.0"
   },
   "private": true
 }

@@ -23,7 +23,6 @@ import {
   userResponseSchema,
   registerResponseSchema,
 } from "./auth.schemas";
-import { requireRole } from "../middleware/auth.middleware";
 import {
   successResponseSchema,
   errorResponseSchema,
@@ -53,7 +52,17 @@ export function createAuthRouter(
   middleware: AuthRouterMiddleware,
 ) {
   const router = createAppRouter();
-  const { registerUseCase, loginUseCase, refreshUseCase, logoutUseCase, meUseCase, verifyEmailUseCase, resendVerificationUseCase, forgotPasswordUseCase, resetPasswordUseCase } = deps;
+  const {
+    registerUseCase,
+    loginUseCase,
+    refreshUseCase,
+    logoutUseCase,
+    meUseCase,
+    verifyEmailUseCase,
+    resendVerificationUseCase,
+    forgotPasswordUseCase,
+    resetPasswordUseCase,
+  } = deps;
   const { authMiddleware } = middleware;
 
   const registerRoute = createRoute({
