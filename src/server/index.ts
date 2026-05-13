@@ -1,6 +1,5 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { container } from "./infrastructure/di/container";
-import { createAuthMiddleware } from "./infrastructure/http/middleware/auth.middleware";
 import { authRouter } from "./infrastructure/http/auth";
 import { createHealthRouter } from "./infrastructure/http/health/health.routes";
 import { corsMiddleware } from "./infrastructure/http/middleware/cors";
@@ -11,7 +10,7 @@ import { rateLimiter } from "./infrastructure/http/middleware/rate-limiter";
 import { adminRouter } from "./infrastructure/http/admin";
 import { ErrorCode } from "./core/errors";
 
-const { rateLimiterService, roleRepository, tokenService, userRepository, tokenBlacklistService, healthCheckService } = container.cradle;
+const { rateLimiterService, roleRepository, healthCheckService } = container.cradle;
 
 const healthRouter = createHealthRouter({ healthCheckService });
 

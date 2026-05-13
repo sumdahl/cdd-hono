@@ -35,6 +35,7 @@ describe("RegisterUseCase", () => {
 
     expect(result.email).toBe("sumiran@example.com");
     expect(result.name).toBe("Sumiran");
+    expect(result.verificationEmailSent).toBe(true);
     expect(result).not.toHaveProperty("passwordHash");
   });
 

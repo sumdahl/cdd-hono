@@ -5,8 +5,8 @@ import { requireRole } from "../middleware/auth.middleware";
 import {
   successResponseSchema,
   errorResponseSchema,
-} from "../response/response.schemas";
-import { successHandler } from "../response/response.handler";
+  successHandler,
+} from "../response/response";
 import {
   userResponseSchema,
   assignRoleSchema,
@@ -25,12 +25,12 @@ import { RemoveRoleUseCase } from "../../../core/use-cases/admin/remove-role";
 import { AppContext } from "../types/context";
 
 export type AdminRouterDeps = {
-  getAllUsers: GetAllUsersUseCase;
-  getUserById: GetUserByIdUseCase;
-  deleteUser: DeleteUserUseCase;
-  getAllRoles: GetAllRolesUseCase;
-  assignRole: AssignRoleUseCase;
-  removeRole: RemoveRoleUseCase;
+  getAllUsersUseCase: GetAllUsersUseCase;
+  getUserByIdUseCase: GetUserByIdUseCase;
+  deleteUserUseCase: DeleteUserUseCase;
+  getAllRolesUseCase: GetAllRolesUseCase;
+  assignRoleUseCase: AssignRoleUseCase;
+  removeRoleUseCase: RemoveRoleUseCase;
 };
 
 export type AdminRouterMiddleware = {
@@ -42,7 +42,7 @@ export function createAdminRouter(
   middleware: AdminRouterMiddleware,
 ) {
   const router = createAppRouter();
-  const { getAllUsers, getUserById, deleteUser, getAllRoles, assignRole, removeRole } = deps;
+  const { getAllUsersUseCase, getUserByIdUseCase, deleteUserUseCase, getAllRolesUseCase, assignRoleUseCase, removeRoleUseCase } = deps;
   const { authMiddleware } = middleware;
 
   const getAllUsersRoute = createRoute({
@@ -238,40 +238,40 @@ export function createAdminRouter(
 
   router.openapi(getAllUsersRoute, async (c) => {
     const { page, limit } = c.req.valid("query");
-    const result = await getAllUsers.execute({ page, limit });
+    const result = await getAllUsersUseCase.execute({ page, limit });
     return successHandler(c, result);
   });
 
   router.openapi(getUserByIdRoute, async (c) => {
     const { userId } = c.req.param();
-    const user = await getUserById.execute(userId);
+    const user = await getUserByIdUseCase.execute(userId);
     return successHandler(c, { user });
   });
 
   router.openapi(deleteUserRoute, async (c) => {
     const { userId } = c.req.param();
     const requestingUserId = c.get("userId");
-    await deleteUser.execute(userId, requestingUserId);
+    await deleteUserUseCase.execute(userId, requestingUserId);
     return successHandler(c, {}, "User deleted successfully");
   });
 
   router.openapi(getAllRolesRoute, async (c) => {
     const { page, limit } = c.req.valid("query");
-    const result = await getAllRoles.execute({ page, limit });
+    const result = await getAllRolesUseCase.execute({ page, limit });
     return successHandler(c, result);
   });
 
   router.openapi(assignRoleRoute, async (c) => {
     const { userId } = c.req.param();
     const { role } = c.req.valid("json");
-    await assignRole.execute(userId, role);
+    await assignRoleUseCase.execute(userId, role);
     return successHandler(c, {}, "Role assigned successfully");
   });
 
   router.openapi(removeRoleRoute, async (c) => {
     const { userId, roleName } = c.req.param();
     const requestingUserId = c.get("userId");
-    await removeRole.execute(userId, roleName, requestingUserId);
+    await removeRoleUseCase.execute(userId, roleName, requestingUserId);
     return successHandler(c, {}, "Role removed successfully");
   });
 

@@ -2,7 +2,7 @@ import type { MiddlewareHandler, Context } from "hono";
 import { createMiddleware } from "hono/factory";
 import { ErrorCode } from "../../../core/errors";
 import { IRateLimiterService } from "../../../core/services/rate-limiter.service";
-import { formatError } from "../response/response.formatter";
+import { formatError } from "../response/response";
 
 export type RateLimiterOptions = {
   rateLimiterService: IRateLimiterService;

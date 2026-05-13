@@ -1,5 +1,5 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
-import { formatError } from "../response/response.formatter";
+import { formatError } from "../response/response";
 
 export const createAppRouter = () =>
   new OpenAPIHono({

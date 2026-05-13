@@ -1,81 +1,45 @@
-import { logger } from "../logger";
 import { eq } from "drizzle-orm";
 import { DB } from "../db";
+import { withDbError } from "../db/with-db-error";
 import { passwordResetTokens } from "./schema/user.schema";
 import { IPasswordResetTokenRepository } from "../../core/repositories/password-reset-token.repository";
-import { AppError, ErrorCode } from "../../core/errors";
 
 export class PostgresPasswordResetTokenRepository implements IPasswordResetTokenRepository {
   constructor(private readonly db: DB) {}
 
   async save(userId: string, token: string, expiresAt: Date): Promise<void> {
-    try {
-      await this.db.insert(passwordResetTokens).values({
+    return withDbError("save password reset token", () =>
+      this.db.insert(passwordResetTokens).values({
         id: crypto.randomUUID(),
         userId,
         token,
         expiresAt,
-      });
-    } catch (err) {
-      logger.error({ err }, "[DB] save password reset token failed");
-      throw new AppError(
-        ErrorCode.DB_ERROR,
-        "Failed to save password reset token",
-        500,
-      );
-    }
+      }),
+    );
   }
 
   async find(
     token: string,
   ): Promise<{ userId: string; expiresAt: Date } | null> {
-    try {
+    return withDbError("find password reset token", async () => {
       const [row] = await this.db
         .select()
         .from(passwordResetTokens)
         .where(eq(passwordResetTokens.token, token));
       if (!row) return null;
       return { userId: row.userId, expiresAt: row.expiresAt };
-    } catch (err) {
-      logger.error({ err }, "[DB] find password reset token failed");
-      throw new AppError(
-        ErrorCode.DB_ERROR,
-        "Failed to find password reset token",
-        500,
-      );
-    }
+    });
   }
 
   async delete(token: string): Promise<void> {
-    try {
-      await this.db
-        .delete(passwordResetTokens)
-        .where(eq(passwordResetTokens.token, token));
-    } catch (err) {
-      logger.error({ err }, "[DB] delete password reset token failed");
-      throw new AppError(
-        ErrorCode.DB_ERROR,
-        "Failed to delete password reset token",
-        500,
-      );
-    }
+    return withDbError("delete password reset token", () =>
+      this.db.delete(passwordResetTokens).where(eq(passwordResetTokens.token, token)),
+    );
   }
 
   async deleteAllForUser(userId: string): Promise<void> {
-    try {
-      await this.db
-        .delete(passwordResetTokens)
-        .where(eq(passwordResetTokens.userId, userId));
-    } catch (err) {
-      logger.error(
-        { err },
-        "[DB] deleteAllForUser password reset tokens failed",
-      );
-      throw new AppError(
-        ErrorCode.DB_ERROR,
-        "Failed to delete password reset tokens",
-        500,
-      );
-    }
+    return withDbError("delete all password reset tokens for user", () =>
+      this.db.delete(passwordResetTokens).where(eq(passwordResetTokens.userId, userId)),
+    );
   }
 }

@@ -37,16 +37,18 @@ export class RegisterUseCase {
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
     await this.verificationTokenRepository.save(user.id, token, expiresAt);
 
-    this.emailService
-      .sendVerificationEmail(user.email, user.name, token)
-      .catch((err) => {
-        console.error(
-          "[RegisterUseCase] Failed to send verification email to:",
-          user.email,
-          err,
-        );
-      });
+    let verificationEmailSent = false;
+    try {
+      await this.emailService.sendVerificationEmail(user.email, user.name, token);
+      verificationEmailSent = true;
+    } catch (err) {
+      console.error(
+        "[RegisterUseCase] Failed to send verification email to:",
+        user.email,
+        err,
+      );
+    }
 
-    return { id: user.id, email: user.email, name: user.name };
+    return { id: user.id, email: user.email, name: user.name, verificationEmailSent };
   }
 }

@@ -1,10 +1,9 @@
-import { logger } from "../logger";
 import { eq } from "drizzle-orm";
 import { DB } from "../db";
+import { withDbError } from "../db/with-db-error";
 import { verificationTokens } from "./schema/user.schema";
 import { IVerificationTokenRepository } from "../../core/repositories/verification-token.repository";
 import { VerificationTokenEntity } from "../../core/entities/verification-token.entity";
-import { AppError, ErrorCode } from "../../core/errors";
 
 export class PostgresVerificationTokenRepository implements IVerificationTokenRepository {
   constructor(private readonly db: DB) {}
@@ -14,79 +13,35 @@ export class PostgresVerificationTokenRepository implements IVerificationTokenRe
     token: string,
     expiresAt: Date,
   ): Promise<VerificationTokenEntity> {
-    try {
+    return withDbError("save verification token", async () => {
       const [row] = await this.db
         .insert(verificationTokens)
         .values({ id: crypto.randomUUID(), userId, token, expiresAt })
         .returning();
-      return new VerificationTokenEntity(
-        row.id,
-        row.userId,
-        row.token,
-        row.expiresAt,
-        row.createdAt,
-      );
-    } catch (err) {
-      logger.error("[DB] save verification token failed:", err);
-      throw new AppError(
-        ErrorCode.DB_ERROR,
-        "Failed to save verification token",
-        500,
-      );
-    }
+      return new VerificationTokenEntity(row.id, row.userId, row.token, row.expiresAt, row.createdAt);
+    });
   }
 
   async find(token: string): Promise<VerificationTokenEntity | null> {
-    try {
+    return withDbError("find verification token", async () => {
       const [row] = await this.db
         .select()
         .from(verificationTokens)
         .where(eq(verificationTokens.token, token));
       if (!row) return null;
-      return new VerificationTokenEntity(
-        row.id,
-        row.userId,
-        row.token,
-        row.expiresAt,
-        row.createdAt,
-      );
-    } catch (err) {
-      logger.error("[DB] find verification token failed:", err);
-      throw new AppError(
-        ErrorCode.DB_ERROR,
-        "Failed to find verification token",
-        500,
-      );
-    }
+      return new VerificationTokenEntity(row.id, row.userId, row.token, row.expiresAt, row.createdAt);
+    });
   }
 
   async delete(token: string): Promise<void> {
-    try {
-      await this.db
-        .delete(verificationTokens)
-        .where(eq(verificationTokens.token, token));
-    } catch (err) {
-      logger.error("[DB] delete verification token failed:", err);
-      throw new AppError(
-        ErrorCode.DB_ERROR,
-        "Failed to delete verification token",
-        500,
-      );
-    }
+    return withDbError("delete verification token", () =>
+      this.db.delete(verificationTokens).where(eq(verificationTokens.token, token)),
+    );
   }
 
   async deleteAllForUser(userId: string): Promise<void> {
-    try {
-      await this.db
-        .delete(verificationTokens)
-        .where(eq(verificationTokens.userId, userId));
-    } catch (err) {
-      logger.error("[DB] deleteAllForUser verification tokens failed:", err);
-      throw new AppError(
-        ErrorCode.DB_ERROR,
-        "Failed to delete verification tokens",
-        500,
-      );
-    }
+    return withDbError("delete all verification tokens for user", () =>
+      this.db.delete(verificationTokens).where(eq(verificationTokens.userId, userId)),
+    );
   }
 }
