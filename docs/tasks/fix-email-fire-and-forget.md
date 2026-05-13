@@ -2,7 +2,7 @@
 
 ## Metadata
 - **Priority:** High
-- **Status:** Pending
+- **Status:** Done
 - **Dependencies:** Recommended to complete `add-unit-of-work-pattern.md` first for full transactional safety
 
 ## Problem

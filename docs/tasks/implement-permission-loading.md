@@ -2,7 +2,7 @@
 
 ## Metadata
 - **Priority:** High
-- **Status:** Pending
+- **Status:** Done
 - **Dependencies:** `fix-app-context-types.md` must be completed first
 
 ## Problem
