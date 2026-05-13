@@ -62,6 +62,15 @@ export const userResponseSchema = z
   })
   .openapi("UserResponse");
 
+export const registerResponseSchema = z
+  .object({
+    id: z.string(),
+    email: z.string(),
+    name: z.string(),
+    verificationEmailSent: z.boolean(),
+  })
+  .openapi("RegisterResponse");
+
 export const authResponseSchema = z
   .object({
     accessToken: z.string(),

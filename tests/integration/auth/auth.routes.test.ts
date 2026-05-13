@@ -48,30 +48,30 @@ beforeAll(() => {
 
   const authRouter = createAuthRouter(
     {
-      register: new RegisterUseCase(
+      registerUseCase: new RegisterUseCase(
         userRepository,
         verificationTokenRepository,
         emailService,
         roleRepository,
       ),
-      login: new LoginUseCase(userRepository, tokenRepository, roleRepository, tokenService),
-      refresh: new RefreshUseCase(userRepository, tokenRepository, tokenService),
-      logout: new LogoutUseCase(tokenRepository),
-      me: new MeUseCase(userRepository),
-      verifyEmail: new VerifyEmailUseCase(userRepository, verificationTokenRepository),
-      resendVerification: new ResendVerificationUseCase(
+      loginUseCase: new LoginUseCase(userRepository, tokenRepository, roleRepository, tokenService),
+      refreshUseCase: new RefreshUseCase(userRepository, tokenRepository, tokenService),
+      logoutUseCase: new LogoutUseCase(tokenRepository),
+      meUseCase: new MeUseCase(userRepository),
+      verifyEmailUseCase: new VerifyEmailUseCase(userRepository, verificationTokenRepository),
+      resendVerificationUseCase: new ResendVerificationUseCase(
         userRepository,
         verificationTokenRepository,
         emailService,
         rateLimiterService,
       ),
-      forgotPassword: new ForgotPasswordUseCase(
+      forgotPasswordUseCase: new ForgotPasswordUseCase(
         userRepository,
         passwordResetTokenRepository,
         emailService,
         rateLimiterService,
       ),
-      resetPassword: new ResetPasswordUseCase(
+      resetPasswordUseCase: new ResetPasswordUseCase(
         userRepository,
         passwordResetTokenRepository,
         tokenRepository,

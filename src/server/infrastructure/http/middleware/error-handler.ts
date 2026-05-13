@@ -1,6 +1,6 @@
 import { Context } from "hono";
 import { AppError, ErrorCode } from "../../../core/errors";
-import { formatError } from "../response/response.formatter";
+import { formatError } from "../response/response";
 import { logger } from "../../logger";
 
 export const errorHandler = (err: Error, c: Context) => {

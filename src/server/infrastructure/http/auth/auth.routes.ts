@@ -21,26 +21,27 @@ import {
   authResponseSchema,
   accessTokenResponseSchema,
   userResponseSchema,
+  registerResponseSchema,
 } from "./auth.schemas";
 import { requireRole } from "../middleware/auth.middleware";
 import {
   successResponseSchema,
   errorResponseSchema,
-} from "../response/response.schemas";
-import { successHandler } from "../response/response.handler";
+  successHandler,
+} from "../response/response";
 import { createAppRouter } from "../shared/create-router";
 import { AppContext } from "../types/context";
 
 export type AuthRouterDeps = {
-  register: RegisterUseCase;
-  login: LoginUseCase;
-  refresh: RefreshUseCase;
-  logout: LogoutUseCase;
-  me: MeUseCase;
-  verifyEmail: VerifyEmailUseCase;
-  resendVerification: ResendVerificationUseCase;
-  forgotPassword: ForgotPasswordUseCase;
-  resetPassword: ResetPasswordUseCase;
+  registerUseCase: RegisterUseCase;
+  loginUseCase: LoginUseCase;
+  refreshUseCase: RefreshUseCase;
+  logoutUseCase: LogoutUseCase;
+  meUseCase: MeUseCase;
+  verifyEmailUseCase: VerifyEmailUseCase;
+  resendVerificationUseCase: ResendVerificationUseCase;
+  forgotPasswordUseCase: ForgotPasswordUseCase;
+  resetPasswordUseCase: ResetPasswordUseCase;
 };
 
 export type AuthRouterMiddleware = {
@@ -52,7 +53,7 @@ export function createAuthRouter(
   middleware: AuthRouterMiddleware,
 ) {
   const router = createAppRouter();
-  const { register, login, refresh, logout, me, verifyEmail, resendVerification, forgotPassword, resetPassword } = deps;
+  const { registerUseCase, loginUseCase, refreshUseCase, logoutUseCase, meUseCase, verifyEmailUseCase, resendVerificationUseCase, forgotPasswordUseCase, resetPasswordUseCase } = deps;
   const { authMiddleware } = middleware;
 
   const registerRoute = createRoute({
@@ -68,7 +69,7 @@ export function createAuthRouter(
         content: {
           "application/json": {
             schema: successResponseSchema(
-              z.object({ user: userResponseSchema }),
+              z.object({ user: registerResponseSchema }),
             ),
           },
         },
@@ -321,7 +322,7 @@ export function createAuthRouter(
 
   router.openapi(registerRoute, async (c) => {
     const input = c.req.valid("json");
-    const user = await register.execute(input);
+    const user = await registerUseCase.execute(input);
     return successHandler(
       c,
       { user },
@@ -332,13 +333,13 @@ export function createAuthRouter(
 
   router.openapi(loginRoute, async (c) => {
     const input = c.req.valid("json");
-    const result = await login.execute(input);
+    const result = await loginUseCase.execute(input);
     return successHandler(c, result, "Login successful");
   });
 
   router.openapi(refreshRoute, async (c) => {
     const { refreshToken } = c.req.valid("json");
-    const result = await refresh.execute(refreshToken);
+    const result = await refreshUseCase.execute(refreshToken);
     return successHandler(c, result, "Token refreshed");
   });
 
@@ -346,31 +347,31 @@ export function createAuthRouter(
     const { refreshToken } = c.req.valid("json");
     const jti = c.get("jti");
     const exp = c.get("exp");
-    await logout.execute(refreshToken, jti, exp);
+    await logoutUseCase.execute(refreshToken, jti, exp);
     return successHandler(c, {}, "Logged out successfully");
   });
 
   router.openapi(meRoute, async (c) => {
     const userId = c.get("userId");
-    const user = await me.execute(userId);
+    const user = await meUseCase.execute(userId);
     return successHandler(c, { user });
   });
 
   router.openapi(verifyEmailRoute, async (c) => {
     const { token } = c.req.valid("query");
-    await verifyEmail.execute(token);
+    await verifyEmailUseCase.execute(token);
     return successHandler(c, {}, "Email verified successfully");
   });
 
   router.openapi(resendVerificationRoute, async (c) => {
     const { email } = c.req.valid("json");
-    await resendVerification.execute(email);
+    await resendVerificationUseCase.execute(email);
     return successHandler(c, {}, "Verification email sent");
   });
 
   router.openapi(forgotPasswordRoute, async (c) => {
     const { email } = c.req.valid("json");
-    await forgotPassword.execute(email);
+    await forgotPasswordUseCase.execute(email);
     return successHandler(
       c,
       {},
@@ -380,7 +381,7 @@ export function createAuthRouter(
 
   router.openapi(resetPasswordRoute, async (c) => {
     const input = c.req.valid("json");
-    await resetPassword.execute(input);
+    await resetPasswordUseCase.execute(input);
     return successHandler(c, {}, "Password reset successfully");
   });
 

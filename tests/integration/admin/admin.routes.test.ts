@@ -67,12 +67,12 @@ beforeAll(async () => {
 
   const adminRouter = createAdminRouter(
     {
-      getAllUsers: new GetAllUsersUseCase(userRepository, roleRepository),
-      getUserById: new GetUserByIdUseCase(userRepository, roleRepository),
-      deleteUser: new DeleteUserUseCase(userRepository),
-      getAllRoles: new GetAllRolesUseCase(roleRepository),
-      assignRole: new AssignRoleUseCase(userRepository, roleRepository),
-      removeRole: new RemoveRoleUseCase(userRepository, roleRepository),
+      getAllUsersUseCase: new GetAllUsersUseCase(userRepository, roleRepository),
+      getUserByIdUseCase: new GetUserByIdUseCase(userRepository, roleRepository),
+      deleteUserUseCase: new DeleteUserUseCase(userRepository),
+      getAllRolesUseCase: new GetAllRolesUseCase(roleRepository),
+      assignRoleUseCase: new AssignRoleUseCase(userRepository, roleRepository),
+      removeRoleUseCase: new RemoveRoleUseCase(userRepository, roleRepository),
     },
     { authMiddleware },
   );
