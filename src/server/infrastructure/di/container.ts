@@ -22,7 +22,7 @@ import { DeleteUserUseCase } from "../../core/use-cases/admin/delete-user";
 import { GetAllRolesUseCase } from "../../core/use-cases/admin/get-all-roles";
 import { AssignRoleUseCase } from "../../core/use-cases/admin/assign-role";
 import { RemoveRoleUseCase } from "../../core/use-cases/admin/remove-role";
-import { InMemoryRateLimiterService } from "../services/in-memory-rate-limiter.service";
+import { RedisRateLimiterService } from "../services/redis-rate-limiter.service";
 import { redis } from "../redis";
 import { RedisTokenBlacklistService } from "../services/redis-token-blacklist.service";
 import { TockTokenService } from "../services/token.service";
@@ -75,7 +75,7 @@ container.register({
   removeRoleUseCase: asClass(RemoveRoleUseCase).singleton(),
 
   // Services
-  rateLimiterService: asClass(InMemoryRateLimiterService).singleton(),
+  rateLimiterService: asClass(RedisRateLimiterService).singleton(),
   tokenService: asClass(TockTokenService).singleton(),
   healthCheckService: asClass(DrizzleHealthCheckService).singleton(),
 });
