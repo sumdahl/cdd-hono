@@ -80,18 +80,15 @@ export class PostgresUserRepository implements IUserRepository {
   }
 
   async markAsVerified(userId: string): Promise<void> {
-    return withDbError("verify user", () =>
-      this.db
-        .update(users)
-        .set({ isVerified: true })
-        .where(eq(users.id, userId)),
-    );
+    return withDbError("verify user", async () => {
+      await this.db.update(users).set({ isVerified: true }).where(eq(users.id, userId));
+    });
   }
 
   async updatePassword(userId: string, passwordHash: string): Promise<void> {
-    return withDbError("update password", () =>
-      this.db.update(users).set({ passwordHash }).where(eq(users.id, userId)),
-    );
+    return withDbError("update password", async () => {
+      await this.db.update(users).set({ passwordHash }).where(eq(users.id, userId));
+    });
   }
 
   async findAll(
@@ -126,8 +123,8 @@ export class PostgresUserRepository implements IUserRepository {
   }
 
   async delete(userId: string): Promise<void> {
-    return withDbError("delete user", () =>
-      this.db.delete(users).where(eq(users.id, userId)),
-    );
+    return withDbError("delete user", async () => {
+      await this.db.delete(users).where(eq(users.id, userId));
+    });
   }
 }

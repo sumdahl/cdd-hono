@@ -47,14 +47,14 @@ export class ResendVerificationUseCase {
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
     await this.verificationTokenRepository.save(user.id, token, expiresAt);
 
-    this.emailService
-      .sendVerificationEmail(user.email, user.name, token)
-      .catch((err) => {
-        console.error(
-          "[ResendVerificationUseCase] Failed to send verification email to:",
-          user.email,
-          err,
-        );
-      });
+    try {
+      await this.emailService.sendVerificationEmail(user.email, user.name, token);
+    } catch (err) {
+      console.error(
+        "[ResendVerificationUseCase] Failed to send verification email to:",
+        user.email,
+        err,
+      );
+    }
   }
 }

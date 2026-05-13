@@ -37,14 +37,14 @@ export class ForgotPasswordUseCase {
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
     await this.passwordResetTokenRepository.save(user.id, token, expiresAt);
 
-    this.emailService
-      .sendPasswordResetEmail(user.email, user.name, token)
-      .catch((err) => {
-        console.error(
-          "[ForgotPasswordUseCase] Failed to send password reset email to:",
-          user.email,
-          err,
-        );
-      });
+    try {
+      await this.emailService.sendPasswordResetEmail(user.email, user.name, token);
+    } catch (err) {
+      console.error(
+        "[ForgotPasswordUseCase] Failed to send password reset email to:",
+        user.email,
+        err,
+      );
+    }
   }
 }

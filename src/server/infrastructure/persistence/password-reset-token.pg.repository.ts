@@ -8,14 +8,14 @@ export class PostgresPasswordResetTokenRepository implements IPasswordResetToken
   constructor(private readonly db: DB) {}
 
   async save(userId: string, token: string, expiresAt: Date): Promise<void> {
-    return withDbError("save password reset token", () =>
-      this.db.insert(passwordResetTokens).values({
+    return withDbError("save password reset token", async () => {
+      await this.db.insert(passwordResetTokens).values({
         id: crypto.randomUUID(),
         userId,
         token,
         expiresAt,
-      }),
-    );
+      });
+    });
   }
 
   async find(
@@ -32,14 +32,14 @@ export class PostgresPasswordResetTokenRepository implements IPasswordResetToken
   }
 
   async delete(token: string): Promise<void> {
-    return withDbError("delete password reset token", () =>
-      this.db.delete(passwordResetTokens).where(eq(passwordResetTokens.token, token)),
-    );
+    return withDbError("delete password reset token", async () => {
+      await this.db.delete(passwordResetTokens).where(eq(passwordResetTokens.token, token));
+    });
   }
 
   async deleteAllForUser(userId: string): Promise<void> {
-    return withDbError("delete all password reset tokens for user", () =>
-      this.db.delete(passwordResetTokens).where(eq(passwordResetTokens.userId, userId)),
-    );
+    return withDbError("delete all password reset tokens for user", async () => {
+      await this.db.delete(passwordResetTokens).where(eq(passwordResetTokens.userId, userId));
+    });
   }
 }
