@@ -1,6 +1,7 @@
 // @.rules
 import { createContainer, asClass, asValue, InjectionMode } from "awilix";
-import { db } from "../db";
+import { Redis } from "ioredis";
+import { db, DB } from "../db";
 import { PostgresUserRepository } from "../persistence/user.pg.repository";
 import { PostgresTokenRepository } from "../persistence/token.pg.repository";
 import { PostgresVerificationTokenRepository } from "../persistence/verification-token.pg.repository";
@@ -28,35 +29,71 @@ import { redis } from "../redis";
 import { RedisTokenBlacklistService } from "../services/redis-token-blacklist.service";
 import { TockTokenService } from "../services/token.service";
 import { DrizzleHealthCheckService } from "../services/drizzle-health-check.service";
-import { Cradle } from "./types";
+import { IUserRepository } from "../../core/repositories/user.repository";
+import { ITokenRepository } from "../../core/repositories/token.repository";
+import { IVerificationTokenRepository } from "../../core/repositories/verification-token.repository";
+import { IPasswordResetTokenRepository } from "../../core/repositories/password-reset-token.repository";
+import { IRoleRepository } from "../../core/repositories/role.repository";
+import { IEmailService } from "../../core/services/email.service";
+import { IRateLimiterService } from "../../core/services/rate-limiter.service";
+import { ITokenService } from "../../core/services/token.service";
+import { ITokenBlacklistService } from "../../core/services/token-blacklist.service";
+import { IHealthCheckService } from "../../core/services/health-check.service";
+import { ISessionVerifier } from "../../core/services/session-verifier.service";
+
+export interface Cradle {
+  db: DB;
+  redis: Redis;
+  tokenBlacklistService: ITokenBlacklistService;
+
+  userRepository: IUserRepository;
+  tokenRepository: ITokenRepository;
+  verificationTokenRepository: IVerificationTokenRepository;
+  passwordResetTokenRepository: IPasswordResetTokenRepository;
+  roleRepository: IRoleRepository;
+
+  emailService: IEmailService;
+  rateLimiterService: IRateLimiterService;
+  tokenService: ITokenService;
+  healthCheckService: IHealthCheckService;
+  sessionVerifier: ISessionVerifier;
+
+  registerUseCase: RegisterUseCase;
+  loginUseCase: LoginUseCase;
+  refreshUseCase: RefreshUseCase;
+  logoutUseCase: LogoutUseCase;
+  meUseCase: MeUseCase;
+  verifyEmailUseCase: VerifyEmailUseCase;
+  resendVerificationUseCase: ResendVerificationUseCase;
+  forgotPasswordUseCase: ForgotPasswordUseCase;
+  resetPasswordUseCase: ResetPasswordUseCase;
+
+  getAllUsersUseCase: GetAllUsersUseCase;
+  getUserByIdUseCase: GetUserByIdUseCase;
+  deleteUserUseCase: DeleteUserUseCase;
+  getAllRolesUseCase: GetAllRolesUseCase;
+  assignRoleUseCase: AssignRoleUseCase;
+  removeRoleUseCase: RemoveRoleUseCase;
+}
 
 export const container = createContainer<Cradle>({
   injectionMode: InjectionMode.CLASSIC,
 });
 
 container.register({
-  // Infrastructure
   db: asValue(db),
 
-  //Redis
   redis: asValue(redis),
   tokenBlacklistService: asClass(RedisTokenBlacklistService).singleton(),
 
-  // Repositories
   userRepository: asClass(PostgresUserRepository).singleton(),
   tokenRepository: asClass(PostgresTokenRepository).singleton(),
-  verificationTokenRepository: asClass(
-    PostgresVerificationTokenRepository,
-  ).singleton(),
-  passwordResetTokenRepository: asClass(
-    PostgresPasswordResetTokenRepository,
-  ).singleton(),
+  verificationTokenRepository: asClass(PostgresVerificationTokenRepository).singleton(),
+  passwordResetTokenRepository: asClass(PostgresPasswordResetTokenRepository).singleton(),
   roleRepository: asClass(PostgresRoleRepository).singleton(),
 
-  // Services
   emailService: asClass(ResendEmailService).singleton(),
 
-  // Auth use-cases
   registerUseCase: asClass(RegisterUseCase).singleton(),
   loginUseCase: asClass(LoginUseCase).singleton(),
   refreshUseCase: asClass(RefreshUseCase).singleton(),
@@ -67,7 +104,6 @@ container.register({
   forgotPasswordUseCase: asClass(ForgotPasswordUseCase).singleton(),
   resetPasswordUseCase: asClass(ResetPasswordUseCase).singleton(),
 
-  // Admin use-cases
   getAllUsersUseCase: asClass(GetAllUsersUseCase).singleton(),
   getUserByIdUseCase: asClass(GetUserByIdUseCase).singleton(),
   deleteUserUseCase: asClass(DeleteUserUseCase).singleton(),
@@ -75,7 +111,6 @@ container.register({
   assignRoleUseCase: asClass(AssignRoleUseCase).singleton(),
   removeRoleUseCase: asClass(RemoveRoleUseCase).singleton(),
 
-  // Services
   rateLimiterService: asClass(RedisRateLimiterService).singleton(),
   tokenService: asClass(TockTokenService).singleton(),
   healthCheckService: asClass(DrizzleHealthCheckService).singleton(),
