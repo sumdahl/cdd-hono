@@ -2,20 +2,14 @@ import { Context, MiddlewareHandler } from "hono";
 import { createMiddleware } from "hono/factory";
 import { AppError, ErrorCode } from "../../../core/errors";
 import { AppContext } from "../types/context";
-import { ITokenService } from "../../../core/services/token.service";
-import { ITokenBlacklistService } from "../../../core/services/token-blacklist.service";
-import { IUserRepository } from "../../../core/repositories/user.repository";
+import { ISessionVerifier } from "../../../core/services/session-verifier.service";
 
 export type AuthMiddlewareDeps = {
-  tokenService: ITokenService;
-  userRepository: IUserRepository;
-  tokenBlacklistService: ITokenBlacklistService;
+  sessionVerifier: ISessionVerifier;
 };
 
 export function createAuthMiddleware({
-  tokenService,
-  userRepository,
-  tokenBlacklistService,
+  sessionVerifier,
 }: AuthMiddlewareDeps): MiddlewareHandler<AppContext> {
   return createMiddleware(async (c, next) => {
     const authHeader = c.req.header("Authorization");
@@ -28,44 +22,13 @@ export function createAuthMiddleware({
     }
 
     const token = authHeader.split(" ")[1];
-    let payload;
+    const session = await sessionVerifier.verify(token);
 
-    try {
-      payload = await tokenService.verifyAccessToken(token);
-    } catch (err) {
-      if (err instanceof AppError) {
-        throw new AppError(ErrorCode.UNAUTHORIZED, err.message, 401);
-      }
-      throw new AppError(
-        ErrorCode.UNAUTHORIZED,
-        "Invalid or expired access token",
-        401,
-      );
-    }
-
-    if (payload.jti) {
-      const blacklisted = await tokenBlacklistService.isBlacklisted(
-        payload.jti,
-      );
-      if (blacklisted) {
-        throw new AppError(
-          ErrorCode.UNAUTHORIZED,
-          "Token has been revoked",
-          401,
-        );
-      }
-    }
-
-    const user = await userRepository.findById(payload.userId);
-    if (!user) {
-      throw new AppError(ErrorCode.UNAUTHORIZED, "User no longer exists", 401);
-    }
-
-    c.set("userId", payload.userId);
-    c.set("email", payload.email);
-    c.set("roles", payload.roles ?? []);
-    c.set("jti", payload.jti);
-    c.set("exp", payload.exp);
+    c.set("userId", session.userId);
+    c.set("email", session.email);
+    c.set("roles", session.roles);
+    c.set("jti", session.jti);
+    c.set("exp", session.exp);
 
     await next();
   });
