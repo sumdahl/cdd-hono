@@ -4,6 +4,8 @@ import { Hono } from "hono";
 import { app } from "./server";
 import { env } from "./server/config/env";
 import { errorHandler } from "./server/infrastructure/http/middleware/error-handler";
+import { emailWorker } from "./server/infrastructure/queue/email.worker";
+import { queueConnection, emailQueue } from "./server/infrastructure/queue";
 
 const openApiDoc = app.getOpenAPIDocument({
   openapi: "3.0.0",
@@ -32,6 +34,16 @@ root.get("/openapi.json", (c) => c.json(openApiDoc));
 root.get("/docs", swaggerUI({ url: "/openapi.json" }));
 root.route("/", app);
 root.onError(errorHandler);
+
+const gracefulShutdown = async () => {
+  await emailWorker.close();
+  await emailQueue.close();
+  await queueConnection.quit();
+  process.exit(0);
+};
+
+process.on("SIGTERM", gracefulShutdown);
+process.on("SIGINT", gracefulShutdown);
 
 export default {
   port: env.PORT,
