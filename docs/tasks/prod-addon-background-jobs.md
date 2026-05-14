@@ -2,7 +2,7 @@
 
 ## Metadata
 - **Priority:** Medium
-- **Status:** Pending
+- **Status:** Done (feat/async-email-queue)
 - **Estimated time:** ~3h
 - **Dependencies:** None (Redis already wired)
 

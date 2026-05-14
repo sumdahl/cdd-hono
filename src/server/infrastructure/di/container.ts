@@ -7,7 +7,7 @@ import { PostgresTokenRepository } from "../persistence/token.pg.repository";
 import { PostgresVerificationTokenRepository } from "../persistence/verification-token.pg.repository";
 import { PostgresPasswordResetTokenRepository } from "../persistence/password-reset-token.pg.repository";
 import { PostgresRoleRepository } from "../persistence/role.pg.repository";
-import { ResendEmailService } from "../email/resend.email.service";
+import { QueuedEmailService } from "../email/queued-email.service";
 import { RegisterUseCase } from "../../core/use-cases/auth/register";
 import { LoginUseCase } from "../../core/use-cases/auth/login";
 import { RefreshUseCase } from "../../core/use-cases/auth/refresh";
@@ -92,7 +92,7 @@ container.register({
   passwordResetTokenRepository: asClass(PostgresPasswordResetTokenRepository).singleton(),
   roleRepository: asClass(PostgresRoleRepository).singleton(),
 
-  emailService: asClass(ResendEmailService).singleton(),
+  emailService: asClass(QueuedEmailService).singleton(),
 
   registerUseCase: asClass(RegisterUseCase).singleton(),
   loginUseCase: asClass(LoginUseCase).singleton(),
